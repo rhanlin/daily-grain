@@ -6,7 +6,7 @@
 
 ## 1. Functional Requirement Completeness
 
-- [ ] CHK001 Are create/update/delete requirements defined for **Categories**? [Completeness, Spec §US1]
+- [x] CHK001 Are create/update/delete requirements defined for **Categories**? [Completeness, Spec §US1]
 - [ ] CHK002 Is the default **Eisenhower Attribute (Q4)** behavior explicitly stated for new tasks? [Completeness, Spec §FR-003]
 - [ ] CHK003 Are requirements for **Sub-task creation** within a parent task scope defined? [Completeness, Spec §US2]
 - [ ] CHK004 Is the **Auto-Completion** trigger logic (all subtasks done → parent done) clearly specified? [Clarity, Spec §FR-011]

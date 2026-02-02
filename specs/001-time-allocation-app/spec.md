@@ -18,6 +18,9 @@
 - Q: Daily Plan Rollover → A: Unfinished items auto-move to next day, pinned at top with special highlighting.
 - Q: Completion Visibility → A: Completed items remain visible (dimmed) in Category/Task lists until manually archived.
 - Q: Node.js Role & Architecture → A: Node LTS v24.13.0+ for development tooling only (Vite, tests). Backend remains Firebase (Auth/Sync).
+- Q: Console Errors & Feedback → A: No errors reported in console when creating category.
+- Q: UI Interaction & State → A: Dialog closes, text clears, but list doesn't update.
+- Q: Data Persistence Verification → A: Refresh doesn't help. Data IS visible in IndexedDB DevTools, but not in UI. Root cause identified: Type mismatch (Query uses '0', Data uses 'false').
 
 ## User Scenarios & Testing *(mandatory)*
 
