@@ -3,7 +3,7 @@ import { AuthProvider } from '@/features/auth/AuthContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { HomePage } from '@/pages/HomePage';
 import { MatrixPage } from '@/pages/MatrixPage';
-import { DailyPlanView } from '@/features/daily-plan/DailyPlanView';
+import { DailyPlanPage } from '@/pages/DailyPlanPage';
 
 function App() {
   return (
@@ -13,7 +13,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/matrix" element={<MatrixPage />} />
-            <Route path="/daily-plan" element={<DailyPlanView />} />
+            <Route path="/daily-plan" element={<DailyPlanPage />} />
           </Routes>
         </AppLayout>
       </Router>

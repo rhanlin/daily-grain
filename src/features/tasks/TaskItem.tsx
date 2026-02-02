@@ -51,7 +51,15 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
                 {completedCount}/{totalCount}
               </span>
             )}
-            <Badge variant={task.eisenhower.toLowerCase() as any}>
+            <Badge 
+              variant={task.eisenhower.toLowerCase() as any}
+              className="cursor-pointer hover:brightness-90 transition-all"
+              onClick={async (e) => {
+                e.stopPropagation();
+                const nextValue = repository.utils.cycleEisenhower(task.eisenhower);
+                await repository.tasks.update(task.id, { eisenhower: nextValue });
+              }}
+            >
               {task.eisenhower}
             </Badge>
             <Button 

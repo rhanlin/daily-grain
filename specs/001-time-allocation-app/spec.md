@@ -21,6 +21,9 @@
 - Q: Console Errors & Feedback → A: No errors reported in console when creating category.
 - Q: UI Interaction & State → A: Dialog closes, text clears, but list doesn't update.
 - Q: Data Persistence Verification → A: Refresh doesn't help. Data IS visible in IndexedDB DevTools, but not in UI. Root cause identified: Type mismatch (Query uses '0', Data uses 'false').
+- Q: Planning Interface & Drag-and-Drop → A: Create a "Side-by-Side Planning View" (Backlog + Daily Plan) to enable Drag-and-Drop.
+- Q: Eisenhower Attribute Editing → A: Click-to-Cycle Badge (Q1->Q2->Q3->Q4).
+- Q: Sub-task Visibility in Matrix → A: Mixed View (Tasks + Subtasks). UX: "Focus Mode" (Click parent -> dim others) + Filters (Task/Subtask/All).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -94,6 +97,9 @@
 - **FR-012**: (Nice to have) 未來可考慮支援 Google Calendar 單向同步 (目前 MVP 不優先實作)。
 - **FR-013**: **自動結算 (Rollover)**: 當日未完成的計畫項目，必須自動轉移至隔日的 Daily Plan 頂部，並以特殊樣式標註（如「延宕項目」區塊）。
 - **FR-014**: **完成項目呈現**: 已完成的 Task/Sub-task 應保留在原列表中並呈現 **淡化/灰色 (Dimmed)** 樣式，不自動隱藏；使用者可手動選擇「封存」以隱藏完成項目。
+- **FR-015**: **規劃視圖 (Planning View)**: 提供「側邊欄/抽屜」式的待辦清單 (Backlog)，允許使用者將任務/子任務拖曳至每日計畫。
+- **FR-016**: **艾森豪編輯**: 點擊任務卡片上的象限徽章 (Badge) 應循環切換屬性 (Q1→Q2→Q3→Q4)。
+- **FR-017**: **矩陣關聯視圖**: 艾森豪矩陣顯示所有任務與子任務。點擊父任務時，應 **聚焦 (Focus Mode)** 該任務及其子任務，將其餘無關項目淡化處理。提供篩選器切換「僅顯示任務 / 僅顯示子任務 / 全部」。
 
 ### Key Entities
 

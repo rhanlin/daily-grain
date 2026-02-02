@@ -65,6 +65,7 @@ export const repository = {
         taskId,
         title,
         isCompleted: false,
+        eisenhower: 'Q4',
         updatedAt: now
       };
       await db.subtasks.add(subtask);
@@ -94,6 +95,17 @@ export const repository = {
           });
         }
       }
+    }
+  },
+  utils: {
+    cycleEisenhower(current: 'Q1' | 'Q2' | 'Q3' | 'Q4'): 'Q1' | 'Q2' | 'Q3' | 'Q4' {
+      const map: Record<string, 'Q1' | 'Q2' | 'Q3' | 'Q4'> = {
+        'Q1': 'Q2',
+        'Q2': 'Q3',
+        'Q3': 'Q4',
+        'Q4': 'Q1'
+      };
+      return map[current];
     }
   },
   dailyPlan: {

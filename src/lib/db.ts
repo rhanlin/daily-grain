@@ -25,6 +25,7 @@ export interface SubTask {
   taskId: string;
   title: string;
   isCompleted: boolean;
+  eisenhower: 'Q1' | 'Q2' | 'Q3' | 'Q4';
   updatedAt: string;
 }
 
