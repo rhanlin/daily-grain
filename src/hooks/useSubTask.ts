@@ -1,5 +1,4 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '@/lib/db';
 import { repository } from '@/lib/repository';
 
 export const useSubTask = (taskId: string) => {

@@ -10,17 +10,37 @@ export const useDailyPlan = (date: string) => {
   );
 
   const addToPlan = async (refId: string, refType: 'TASK' | 'SUBTASK') => {
-    // Check if already in plan for this date
-    const existing = await db.dailyPlanItems
-      .where({ date, refId })
-      .first();
-    
-    if (existing) return;
+    // Check if the item exists on any date
+    const existingItem = await db.dailyPlanItems.where('refId').equals(refId).first();
 
+    if (existingItem) {
+      // If it exists on the same date, do nothing.
+      if (existingItem.date === date) {
+        return { status: 'noop' };
+      }
+      // If it exists on a different date, signal a conflict.
+      return { status: 'conflict', existingItem };
+    }
+
+    // If it doesn't exist anywhere, add it.
     const maxItem = await db.dailyPlanItems.where('date').equals(date).reverse().sortBy('orderIndex');
     const nextOrder = maxItem.length > 0 ? maxItem[0].orderIndex + 1000 : 1000;
     
     await repository.dailyPlan.add(date, refId, refType, nextOrder);
+    return { status: 'added' };
+  };
+
+  const moveItem = async (itemId: string, newDate: string) => {
+    // This function moves an existing DailyPlanItem to a new date.
+    await db.dailyPlanItems.update(itemId, { 
+      date: newDate,
+      isRollover: false, // Reset rollover status on manual move
+      updatedAt: new Date().toISOString() 
+    });
+  };
+
+  const removeFromPlan = async (id: string) => {
+    await db.dailyPlanItems.delete(id);
   };
 
   const reorderItems = async (ids: string[]) => {
@@ -31,12 +51,17 @@ export const useDailyPlan = (date: string) => {
   };
 
   const triggerRollover = async () => {
-    await rolloverUnfinishedItems(date);
+    const today = new Date().toISOString().split('T')[0];
+    if (date === today) {
+      await rolloverUnfinishedItems(date);
+    }
   };
 
   return {
     planItems: planItems || [],
     addToPlan,
+    moveItem,
+    removeFromPlan,
     reorderItems,
     triggerRollover,
     loading: planItems === undefined

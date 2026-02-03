@@ -1,4 +1,4 @@
-import { collection, onSnapshot, doc, setDoc, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, query } from 'firebase/firestore';
 import { db as firestore } from './firebase';
 import { db as localDb } from './db';
 import { auth } from './firebase';

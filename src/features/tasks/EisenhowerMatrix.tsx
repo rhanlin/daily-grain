@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useTask } from '@/hooks/useTask';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -108,7 +107,7 @@ export const EisenhowerMatrix: React.FC = () => {
           <Target className="h-4 w-4" />
           <span>點擊任務可鎖定關聯子任務</span>
         </div>
-        <Tabs value={viewFilter} onValueChange={(v: any) => setViewFilter(v)}>
+        <Tabs value={viewFilter} onValueChange={(v) => setViewFilter(v as 'ALL' | 'TASK' | 'SUBTASK')}>
           <TabsList className="scale-90 origin-right">
             <TabsTrigger value="ALL">全部</TabsTrigger>
             <TabsTrigger value="TASK">僅任務</TabsTrigger>
@@ -150,5 +149,3 @@ export const EisenhowerMatrix: React.FC = () => {
     </div>
   );
 };
-
-import { TabsContent } from '@/components/ui/tabs';

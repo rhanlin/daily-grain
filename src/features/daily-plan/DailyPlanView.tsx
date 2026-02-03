@@ -7,9 +7,11 @@ import { useDailyPlan } from '@/hooks/useDailyPlan';
 import { PlanToolbar } from './PlanToolbar';
 import { DraggableTask } from '@/components/dnd/DraggableTask';
 import { TaskItem } from '../tasks/TaskItem';
-import { db } from '@/lib/db';
+import { db, type Task } from '@/lib/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useDroppable } from '@dnd-kit/core';
+import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface DailyPlanViewProps {
   selectedDate: string;
@@ -17,7 +19,7 @@ interface DailyPlanViewProps {
 }
 
 export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDateChange }) => {
-  const { planItems, triggerRollover } = useDailyPlan(selectedDate);
+  const { planItems, triggerRollover, removeFromPlan } = useDailyPlan(selectedDate);
   const [sortByMatrix, setSortByMatrix] = useState(false);
   
   const { setNodeRef } = useDroppable({
@@ -25,20 +27,27 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
   });
 
   useEffect(() => {
-    triggerRollover();
-  }, [selectedDate]);
+    const today = new Date().toISOString().split('T')[0];
+    if (selectedDate === today) {
+      triggerRollover();
+    }
+  }, [selectedDate, triggerRollover]);
 
   // We need the actual Task/Subtask objects to render
   const resolvedItems = useLiveQuery(async () => {
     const results = [];
     for (const item of planItems) {
       let data;
+      let parentTask;
       if (item.refType === 'TASK') {
         data = await db.tasks.get(item.refId);
       } else {
         data = await db.subtasks.get(item.refId);
+        if (data) {
+          parentTask = await db.tasks.get(data.taskId);
+        }
       }
-      results.push({ ...item, data });
+      results.push({ ...item, data, parentTask });
     }
     return results;
   }, [planItems]);
@@ -71,22 +80,26 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
         >
           {sortedDisplayItems.map((item) => (
             <DraggableTask key={item.id} id={item.id}>
-              <div className={`relative ${item.isRollover ? 'border-l-4 border-orange-400 pl-2' : ''} bg-background rounded-lg`}>
+              <div className={`relative ${item.isRollover ? 'border-l-4 border-orange-400 pl-2' : ''} bg-background rounded-lg group`}>
                 {item.isRollover && (
                   <span className="text-[10px] text-orange-500 font-bold uppercase absolute -top-4 left-0">
                     昨日延宕
                   </span>
                 )}
-                {item.refType === 'TASK' ? (
-                  <TaskItem task={item.data} />
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="absolute -top-2 -right-2 h-5 w-5 p-0 rounded-full bg-destructive text-white opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-sm"
+                  onPointerDown={(e) => { e.stopPropagation(); removeFromPlan(item.id); }}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+
+                {item.refType === 'TASK' && item.data ? (
+                  <TaskItem task={item.data as Task} viewMode="daily-plan" />
                 ) : (
-                  <div className="border rounded-lg p-3 bg-card flex items-center gap-3 shadow-sm">
-                     <span className="text-sm italic text-muted-foreground">[子任務]</span>
-                     <span className="font-medium">{item.data?.title}</span>
-                     <Badge variant={item.data?.eisenhower?.toLowerCase() as any || 'q4'} className="text-[10px] ml-auto">
-                        {item.data?.eisenhower || 'Q4'}
-                     </Badge>
-                  </div>
+                  <PlanSubTaskItem item={item} />
                 )}
               </div>
             </DraggableTask>
@@ -105,3 +118,34 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
 };
 
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useSubTask } from '@/hooks/useSubTask';
+
+// New component specifically for rendering a sub-task within the daily plan
+const PlanSubTaskItem: React.FC<{ item: any }> = ({ item }) => {
+  const { updateSubTask } = useSubTask(item.parentTask?.id);
+
+  if (!item.data || !item.parentTask) {
+    return null; // Or a loading/error state
+  }
+  
+  const handleCheckedChange = (checked: boolean) => {
+    updateSubTask(item.data.id, { isCompleted: checked });
+  };
+
+  return (
+    <div className={`border rounded-lg p-3 bg-card flex items-center gap-2 shadow-sm text-sm transition-opacity ${item.data.isCompleted ? 'opacity-40' : ''}`}>
+      <Checkbox
+        checked={item.data.isCompleted}
+        onCheckedChange={handleCheckedChange}
+        onClick={(e) => e.stopPropagation()}
+      />
+      <span className="font-semibold text-muted-foreground truncate">{item.parentTask?.title}</span>
+      <span className="text-muted-foreground">/</span>
+      <span className={`font-medium flex-1 truncate ${item.data.isCompleted ? 'line-through' : ''}`}>{item.data?.title}</span>
+      <Badge variant={(item.data?.eisenhower?.toLowerCase() || 'q4') as 'q1' | 'q2' | 'q3' | 'q4'} className="text-[10px] ml-auto">
+          {item.data?.eisenhower || 'Q4'}
+      </Badge>
+    </div>
+  );
+};

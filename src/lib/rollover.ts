@@ -1,18 +1,25 @@
 import { db } from './db';
-import { repository } from './repository';
-import { v4 as uuidv4 } from 'uuid';
 
-export const rolloverUnfinishedItems = async (targetDate: string) => {
-  if (!targetDate) return;
+export const rolloverUnfinishedItems = async (today: string) => {
+  if (!today) return;
 
-  // 1. Find all previous dates that have unfinished items
-  // For simplicity, we'll find all DailyPlanItems where date < targetDate AND ref object is not DONE
+  // 1. Get all items from dates before today.
+  const pastItems = await db.dailyPlanItems.where('date').below(today).toArray();
   
-  const allItems = await db.dailyPlanItems.where('date').below(targetDate).toArray();
+  // 2. Get all items currently in today's plan to check for existence.
+  const todayItems = await db.dailyPlanItems.where('date').equals(today).toArray();
+  const todayRefIds = new Set(todayItems.map(i => i.refId));
+
+  const itemsToRollover = [];
   
-  const rolloverItems = [];
-  
-  for (const item of allItems) {
+  for (const item of pastItems) {
+    // 3. Check if the item is already in today's plan.
+    if (todayRefIds.has(item.refId)) {
+      // If it is, we don't need to roll it over, but we should delete the old one.
+      await db.dailyPlanItems.delete(item.id);
+      continue;
+    }
+
     let isCompleted = false;
     if (item.refType === 'TASK') {
       const task = await db.tasks.get(item.refId);
@@ -23,18 +30,17 @@ export const rolloverUnfinishedItems = async (targetDate: string) => {
     }
 
     if (!isCompleted) {
-      rolloverItems.push(item);
+      itemsToRollover.push(item);
     }
   }
 
-  if (rolloverItems.length === 0) return;
+  if (itemsToRollover.length === 0) return;
 
-  // 2. Move them to targetDate, pinned at top (negative orderIndex)
-  // We'll update the items' date and mark as isRollover
-  for (let i = 0; i < rolloverItems.length; i++) {
-    const item = rolloverItems[i];
+  // 4. Move the valid, non-duplicate items to today's date.
+  for (let i = 0; i < itemsToRollover.length; i++) {
+    const item = itemsToRollover[i];
     await db.dailyPlanItems.update(item.id, {
-      date: targetDate,
+      date: today,
       isRollover: true,
       orderIndex: -1000 + i, // Pin to top
       updatedAt: new Date().toISOString()

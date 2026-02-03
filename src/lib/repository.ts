@@ -22,6 +22,26 @@ export const repository = {
     async update(id: string, updates: Partial<Category>) {
       const updatedAt = new Date().toISOString();
       await db.categories.update(id, { ...updates, updatedAt });
+    },
+    async delete(id: string) {
+      // Soft delete category
+      await db.categories.update(id, { isArchived: true, updatedAt: new Date().toISOString() });
+      // Soft delete all tasks in this category (Cascade Archive)
+      const tasks = await db.tasks.where('categoryId').equals(id).toArray();
+      for (const task of tasks) {
+        await db.tasks.update(task.id, { status: 'ARCHIVED', updatedAt: new Date().toISOString() });
+        // We do NOT delete subtasks for soft-deleted tasks.
+        
+        // Remove from Daily Plan to keep plan clean?
+        // If task is archived, it shouldn't appear in plan.
+        await db.dailyPlanItems.where('refId').equals(task.id).delete();
+        
+        // Also remove subtasks from daily plan
+        const subtasks = await db.subtasks.where('taskId').equals(task.id).toArray();
+        for (const sub of subtasks) {
+            await db.dailyPlanItems.where('refId').equals(sub.id).delete();
+        }
+      }
     }
   },
   tasks: {
@@ -49,9 +69,19 @@ export const repository = {
       // Auto-complete check logic could be triggered here or via a dedicated hook
     },
     async delete(id: string) {
+      // Hard Delete Task
       await db.tasks.delete(id);
-      // Also delete associated subtasks
-      await db.subtasks.where('taskId').equals(id).delete();
+      
+      // Hard Delete Subtasks (Cascade)
+      const subtasks = await db.subtasks.where('taskId').equals(id).toArray();
+      for (const sub of subtasks) {
+        await db.subtasks.delete(sub.id);
+        // Remove Subtasks from Daily Plans
+        await db.dailyPlanItems.where('refId').equals(sub.id).delete();
+      }
+
+      // Remove Task from Daily Plans
+      await db.dailyPlanItems.where('refId').equals(id).delete();
     }
   },
   subtasks: {
@@ -95,6 +125,13 @@ export const repository = {
           });
         }
       }
+    },
+    async delete(id: string) {
+      await db.subtasks.delete(id);
+      // Remove from Daily Plan
+      await db.dailyPlanItems.where('refId').equals(id).delete();
+      
+      // Trigger parent check? Maybe.
     }
   },
   utils: {

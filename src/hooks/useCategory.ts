@@ -1,5 +1,4 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '@/lib/db';
 import { repository } from '@/lib/repository';
 
 export const useCategory = () => {
@@ -16,10 +15,15 @@ export const useCategory = () => {
     await repository.categories.update(id, updates);
   };
 
+  const deleteCategory = async (id: string) => {
+    await repository.categories.delete(id);
+  };
+
   return {
     categories: categories || [],
     createCategory,
     updateCategory,
+    deleteCategory,
     loading: categories === undefined
   };
 };

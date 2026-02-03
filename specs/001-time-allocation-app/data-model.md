@@ -40,10 +40,11 @@ Granular checklist items within a Task.
 | `taskId` | UUID | Foreign Key to Task |
 | `title` | String | Item text |
 | `isCompleted` | Boolean | Completion status |
+| `eisenhower` | Enum | Inherited or independent (Q1-Q4) |
 | `updatedAt` | ISO8601 | For sync resolution |
 
 ### DailyPlanItem (每日計畫項目)
-Mapping of work units to specific days with manual ordering.
+Mapping of work units to specific days.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -51,15 +52,15 @@ Mapping of work units to specific days with manual ordering.
 | `date` | String | Format: `YYYY-MM-DD` |
 | `refId` | UUID | ID of the Task or SubTask |
 | `refType` | Enum | `TASK` | `SUBTASK` |
-| `orderIndex` | Float | Floating point for easy drag-and-drop reordering |
-| `isRollover` | Boolean | True if automatically moved from previous day |
+| `orderIndex` | Float | Manual drag-and-drop order |
+| `isRollover` | Boolean | Auto-moved from previous day |
 | `updatedAt` | ISO8601 | For sync resolution |
 
-## Relationships
+## Constraints & logic
 
-- **Category** has many **Tasks**.
-- **Task** has many **SubTasks**.
-- **DailyPlanItem** points to one **Task** OR **SubTask**.
+- **Cascade Delete**: Deleting a `Category` soft-deletes its `Tasks`. Deleting a `Task` (Archive) soft-deletes `SubTasks` and removes associated `DailyPlanItems`.
+- **Uniqueness**: `DailyPlanItem` must be unique by `(date, refId)`.
+- **Backlog**: `Backlog = All Tasks - (Done + Archived + Scheduled_On_Selected_Date)`.
 
 ## Sync Protocol (Dexie <-> Firestore)
 

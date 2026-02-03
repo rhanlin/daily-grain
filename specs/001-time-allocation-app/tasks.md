@@ -45,7 +45,7 @@ description: "Task list for Personal Time Allocation App (Local-First PWA)"
 
 ## Phase 3: User Story 1 - Categories & Task Creation (Priority: P1)
 
-**Goal**: Users can create Categories and Tasks (defaulting to Q4).
+**Goal**: Users can create, edit, and delete Categories and Tasks.
 **Entities**: Category, Task.
 
 ### Implementation for User Story 1
@@ -57,14 +57,17 @@ description: "Task list for Personal Time Allocation App (Local-First PWA)"
 - [x] T018 [US1] Implement `EisenhowerMatrix` read-only component (4 Quadrants grid) in `src/features/tasks/EisenhowerMatrix.tsx`
 - [x] T019 [US1] Integrate Category and Task creation flow in Home Page
 - [x] T020 [US1] Add visual indicators (Colors/Badges) for Eisenhower Quadrants in `src/components/ui/badge.tsx`
+- [x] T042 [P] [US1] Implement Edit (Rename) and Delete actions with Confirmation Dialog for **Categories** in `src/features/categories/CategoryItem.tsx`
+- [x] T043 [P] [US1] Implement Edit (Inline Icon) and Delete actions with Confirmation Dialog for **Tasks** in `src/features/tasks/TaskItem.tsx`
+- [x] T049 [US1] Implement **Cascade Delete** logic in `src/lib/repository.ts` (Delete Category -> Soft Delete Tasks; Delete Task -> Delete Subtasks & Plan Items)
 
-**Checkpoint**: User can create categories, add tasks, and see them distributed in the Matrix view.
+**Checkpoint**: Full CRUD for Categories and Tasks with safe deletion.
 
 ---
 
 ## Phase 4: User Story 2 - Sub-tasks & Auto-Completion (Priority: P2)
 
-**Goal**: Granular task breakdown and auto-completion logic.
+**Goal**: Granular task breakdown, auto-completion, and sub-task management.
 **Entities**: Task, SubTask.
 
 ### Implementation for User Story 2
@@ -75,14 +78,15 @@ description: "Task list for Personal Time Allocation App (Local-First PWA)"
 - [x] T023 [US2] Implement Auto-Completion Logic: Trigger Task update when all Sub-tasks are checked in `src/lib/repository.ts` (or database hook)
 - [x] T024 [US2] Update Task list UI to show Sub-task progress (e.g., "2/3") in `src/features/tasks/TaskItem.tsx`
 - [x] T025 [US2] Implement "Dimmed" style for completed items (Task & SubTask) in `src/features/tasks/TaskStyles.ts`
+- [x] T044 [P] [US2] Implement Edit (Inline Icon) and Delete actions for **Sub-tasks** in `src/features/tasks/SubTaskList.tsx`
 
-**Checkpoint**: User can split tasks into sub-tasks; finishing all sub-tasks marks parent as done.
+**Checkpoint**: User can fully manage sub-tasks including editing and removing them.
 
 ---
 
 ## Phase 5: User Story 3 - Daily Plan & Ordering (Priority: P3)
 
-**Goal**: Manual planning, dragging tasks to days, and rollover logic.
+**Goal**: Manual planning, dragging tasks to days, backlog management, and rollover logic.
 **Entities**: DailyPlanItem.
 
 ### Implementation for User Story 3
@@ -91,13 +95,16 @@ description: "Task list for Personal Time Allocation App (Local-First PWA)"
 - [x] T041 [P] [US3] Implement unit tests for Manual Reordering logic in `src/hooks/__tests__/useDailyPlan.test.ts`
 - [x] T026 [P] [US3] Create `DailyPlanView` component (Date selector + List) in `src/features/daily-plan/DailyPlanView.tsx`
 - [x] T027 [P] [US3] Implement `DraggableTask` wrapper using `dnd-kit` for Items in `src/components/dnd/DraggableTask.tsx`
-- [x] T028 [US3] Implement "Hybrid Drag Logic": Allow dragging Sub-task if exists, else Task, in `src/features/daily-plan/DragLogic.ts`
+- [x] T028 [US3] Implement "Hybrid Drag Logic" in `src/features/daily-plan/DragLogic.ts`
 - [x] T029 [US3] Implement Drop Zone in Daily Plan to create `DailyPlanItem` records in `src/features/daily-plan/PlanDropZone.tsx`
 - [x] T030 [US3] Implement Manual Reordering logic (updating `orderIndex`) in `src/hooks/useDailyPlan.ts`
 - [x] T031 [US3] Implement "Rollover" Service: On load, check previous day's unfinished items and move to today (Top pinned) in `src/lib/rollover.ts`
 - [x] T032 [US3] Add Toggle switch to view Daily Plan sorted by Eisenhower Priority vs Manual Order in `src/features/daily-plan/PlanToolbar.tsx`
+- [x] T045 [US3] Refine DailyPlan interaction: **Disable click-to-add**, enforce **Unique Items per Day** in `src/hooks/useDailyPlan.ts`
+- [x] T046 [US3] Implement **Remove from Plan** action (X Icon) in `src/features/daily-plan/DailyPlanView.tsx`
+- [x] T047 [US3] Update **Backlog Logic**: Filter out items that are already in the *current* daily plan or completed in `src/pages/DailyPlanPage.tsx`
 
-**Checkpoint**: Full "Agile" cycle: Plan day, drag items, reorder, auto-rollover unfinished work.
+**Checkpoint**: Robust planning experience with strict drag-and-drop rules and backlog filtering.
 
 ---
 
@@ -110,6 +117,7 @@ description: "Task list for Personal Time Allocation App (Local-First PWA)"
 - [x] T035 Verify "Offline Mode" behavior (disconnect network and test CRUD)
 - [x] T036 Clean up console logs and unused imports
 - [x] T037 Add final "Archive" action for completed tasks to hide them from lists
+- [x] T048 [Polish] Implement **Matrix Focus Mode** (dim unrelated items) and **View Filters** (Task/Subtask/All) in `src/features/tasks/EisenhowerMatrix.tsx`
 
 ---
 

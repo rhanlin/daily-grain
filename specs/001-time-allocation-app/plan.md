@@ -9,6 +9,12 @@
 
 Build a Local-First PWA for personal time allocation using the Eisenhower Matrix and Agile principles.
 **Primary Requirement**: Create a "Category -> Task -> Subtask" hierarchy where tasks are dragged to a manual-sort "Daily Plan".
+**Key Updates**:
+- Full CRUD (Edit/Delete) for all entities with Confirmation Dialogs.
+- "Backlog" side-panel filters out scheduled/completed items.
+- "Daily Plan" enforces drag-only adding and unique items per day.
+- "Focus Mode" in Matrix view.
+
 **Technical Approach**:
 - Frontend: React (Vite) + TypeScript + TailwindCSS v4 + Shadcn UI.
 - Storage: IndexedDB (via LocalForage or similar) for offline-first capability.
@@ -59,14 +65,15 @@ src/
 ├── assets/
 ├── components/          # Shadcn UI & Shared components
 │   ├── ui/
+│   ├── dnd/             # Draggable wrappers
 │   └── ...
 ├── features/
 │   ├── auth/            # Google Sign-In
-│   ├── categories/      # Category management
-│   ├── tasks/           # Task/Subtask & Matrix logic
-│   └── daily-plan/      # Daily Plan & Manual Sort
-├── hooks/               # Custom hooks (useTasks, useAuth)
-├── lib/                 # Utilities (db, utils)
+│   ├── categories/      # Category management (List, Edit, Create)
+│   ├── tasks/           # Task/Subtask logic (Item, Matrix, Edit)
+│   └── daily-plan/      # Daily Plan (View, Toolbar, Logic)
+├── hooks/               # Custom hooks (useTasks, useAuth, useDailyPlan)
+├── lib/                 # Utilities (db, utils, sync, rollover)
 ├── stores/              # State management (Zustand/Context)
 └── types/               # TypeScript definitions
 
