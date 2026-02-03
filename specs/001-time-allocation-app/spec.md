@@ -7,8 +7,11 @@
 
 ## Clarifications
 
-### Session 2026-02-03<--SEP-->- Q: When a user drags a sub-task to a new date, but it's already scheduled on a different date, what should happen? → A: Ask to Move (Confirmation): Show a confirmation dialog: 'This item is already on [Old Date]'s plan. Do you want to move it to [New Date]?'
-
+### Session 2026-02-03<--SEP-->- Q: Where should the 'Add from Backlog' button be placed on mobile? → A: Floating Action Button (FAB): Positioned at the bottom-right, but lifted up (e.g., bottom-20) to clear the navigation bar.
+- Q: How should the Backlog be accessed for a mobile-first UX? → A: Responsive Sheet/Drawer: Use a side-panel (Sheet) on desktop and a bottom-panel (Drawer) on mobile.
+- Q: How to make adding items on mobile more intuitive? → A: Tap-to-Add: Tapping a single item in the backlog drawer instantly adds it to the Daily Plan.
+- Q: New Design Principle → A: User Feedback: All user actions must provide clear and immediate feedback to confirm success or failure (e.g., using toast notifications).
+- Q: When a user drags a sub-task to a new date, but it's already scheduled on a different date, what should happen? → A: Ask to Move (Confirmation): Show a confirmation dialog: 'This item is already on [Old Date]'s plan. Do you want to move it to [New Date]?'
 - Q: When should the system check for and roll over unfinished items from past days? → A: When viewing today's plan: The app should only check for unfinished items from dates before today and only move them to today's plan.
 - Q: How should the backlog filter items that are scheduled on other days? → A: Context-aware (Current behavior): The backlog should only hide items scheduled on the specific day being viewed.
 - Q: How should we visually indicate that a backlog item is already scheduled on a different day? → A: Icon with Tooltip: Show a calendar icon, and display a tooltip with the scheduled date.
@@ -111,7 +114,7 @@
 - **FR-012**: (Nice to have) 未來可考慮支援 Google Calendar 單向同步 (目前 MVP 不優先實作)。
 - **FR-013**: **自動結算 (Rollover)**: 當使用者檢視 **今日** 的計畫時，系統會自動檢查所有 **過去日期** 的計畫。任何未完成的項目都會被移動至 **今日計畫** 的頂部，並以特殊樣式標註。此檢查僅在檢視今日時觸發。
 - **FR-014**: **完成項目呈現**: 已完成的 Task/Sub-task 應保留在原列表中並呈現 **淡化/灰色 (Dimmed)** 樣式，不自動隱藏；使用者可手動選擇「封存」以隱藏完成項目。
-- **FR-015**: **規劃視圖 (Planning View)**: 提供「側邊欄/抽屜」式的待辦清單 (Backlog)，允許使用者將任務/子任務拖曳至每日計畫。
+- **FR-015**: **響應式規劃視圖 (Responsive Planning View)**: 在桌面版（寬螢幕），待辦清單 (Backlog) 應實作為一個從右側滑入的 **側邊面板 (Sheet)**，展開時會推擠主要內容。在移動版（窄螢幕），則使用從底部彈出的 **抽屜 (Drawer)**。
 - **FR-016**: **艾森豪編輯**: 點擊任務卡片上的象限徽章 (Badge) 應循環切換屬性 (Q1→Q2→Q3→Q4)。
 - **FR-017**: **矩陣關聯視圖**: 艾森豪矩陣顯示所有任務與子任務。點擊父任務時，應 **聚焦 (Focus Mode)** 該任務及其子任務，將其餘無關項目淡化處理。提供篩選器切換「僅顯示任務 / 僅顯示子任務 / 全部」。
 - **FR-018**: **完整 CRUD**: 所有的 Category, Task, Sub-task 必須提供「編輯」與「刪除」功能。
@@ -124,8 +127,10 @@
 - **FR-025**: **子任務父層情境 (Sub-task Parent Context)**: 在「每日計畫」視圖中，每個子任務項目都必須清晰地展示其所屬的父任務標題，以便使用者理解其來源與情境。
 - **FR-026**: **每日計畫中的子任務互動 (Sub-task Interaction in Daily Plan)**: 在「每日計畫」視圖中，每個子任務項目必須包含一個可互動的 **Checkbox**，允許使用者直接將其標記為完成或未完成。
 - **FR-027**: **重置延宕狀態 (Rollover Status Reset)**: 如果一個被標記為「昨日未完成」的項目從任何一日的計畫中被移除（例如，被拖回到待辦清單），其「延宕」狀態必須被清除。當它再次被加入計畫時，應視為一個普通項目。
-n- **FR-028**: **待辦清單排程提示 (Backlog Schedule Hint)**: 在待辦清單 (Backlog) 中，如果一個項目已經被安排在 **其他日期** 的計畫中，它的旁邊必須顯示一個日曆圖示。當滑鼠懸停在該圖示上時，應出現一個提示框 (Tooltip)，顯示其已被安排的具體日期（例如，「已排程於 2026-02-04」）。
-n- **FR-029**: **移動已排程項目之確認 (Confirm Move of Scheduled Item)**: 當使用者嘗試將一個已排程在  的項目拖曳至  時，系統必須彈出一個確認對話框，詢問使用者是否要將該項目從舊日期 **移動** 至新日期。如果確認，則更新該項目的日期；如果取消，則不進行任何變更。
+- **FR-028**: **待辦清單排程提示 (Backlog Schedule Hint)**: 在待辦清單 (Backlog) 中，如果一個項目已經被安排在 **其他日期** 的計畫中，它的旁邊必須顯示一個日曆圖示。當滑鼠懸停在該圖示上時，應出現一個提示框 (Tooltip)，顯示其已被安排的具體日期（例如，「已排程於 2026-02-04」）。
+- **FR-029**: **移動已排程項目之確認 (Confirm Move of Scheduled Item)**: 當使用者嘗試將一個已排程在 `[舊日期]` 的項目拖曳至 `[新日期]` 時，系統必須彈出一個確認對話框，詢問使用者是否要將該項目從舊日期 **移動** 至新日期。如果確認，則更新該項目的日期；如果取消，則不進行任何變更。
+- **FR-030**: **移動版互動模式 (Mobile Interaction Mode)**: 在移動版（窄螢幕）上，使用者透過 **點擊 (Tap)** 待辦清單中的項目，即可將其新增至當日計畫。新增成功後，系統應給予一個短暫的提示（如 Toast 通知），且抽屜應自動關閉。此模式下，禁用該區域的拖曳功能。
+n- **FR-031**: **浮動動作按鈕 (FAB) 位置**: 「新增計畫項目」按鈕應實作為懸浮在頁面右下角的圓形按鈕。在移動版上，必須透過調整底部間距（如 ）來確保按鈕不會被底部導覽列遮擋，且符合姆指操作熱區。
 
 ### Key Entities
 
@@ -134,6 +139,10 @@ n- **FR-029**: **移動已排程項目之確認 (Confirm Move of Scheduled Item)
 - **Task**: 工作項目，隸屬於 Category，包含艾森豪屬性、手動排序索引。
 - **SubTask**: 子任務，隸屬於 Task，包含 Checkbox 與描述。
 - **DailyPlanItem**: 每日計畫中的項目，可指向 Task 或 SubTask，包含排序索引與狀態 (Rollover)。
+
+## Design Principles
+
+- **DP-001: Immediate Feedback**: Every user action, whether successful or failed, must provide clear and immediate feedback. This can be through UI state changes or unobtrusive notifications (e.g., toasts).
 
 ## Success Criteria *(mandatory)*
 

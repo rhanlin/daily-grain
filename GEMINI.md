@@ -27,5 +27,8 @@ TypeScript 5.x, Node.js 20+ (for tooling): Follow standard conventions
 
 - 001-time-allocation-app: Added TypeScript 5.x, Node.js 20+ (for tooling) + React 18+, Vite, TailwindCSS 4, Shadcn UI, Vites
 
+## ReactJS Principles
+- **Prefer `react-use`**: For common hooks (e.g., `useMedia`, `useToggle`, `useDebounce`), prefer using the `react-use` library instead of creating custom implementations to avoid reinventing the wheel.
+
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

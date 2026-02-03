@@ -4,6 +4,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragOverlay,
@@ -18,15 +19,19 @@ import {
 import { useDailyPlan } from '@/hooks/useDailyPlan';
 import { useTask } from '@/hooks/useTask';
 import { useSubTask } from '@/hooks/useSubTask';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Plus } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { DailyPlanView } from '@/features/daily-plan/DailyPlanView';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Drawer, DrawerTrigger, DrawerContent } from '@/components/ui/drawer';
+import { Badge } from '@/components/ui/badge';
+import { useDraggable } from '@dnd-kit/core';
+import { useMedia } from 'react-use';
+import { toast } from "sonner"
 
 interface ConflictState {
   active: Active;
@@ -39,6 +44,9 @@ export const DailyPlanPage: React.FC = () => {
   const { planItems, addToPlan, reorderItems, moveItem } = useDailyPlan(selectedDate);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [conflict, setConflict] = useState<ConflictState | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const isDesktop = useMedia("(min-width: 768px)");
 
   const allScheduledItems = useLiveQuery(() => db.dailyPlanItems.toArray(), []);
   const scheduledMap = React.useMemo(() => {
@@ -52,22 +60,15 @@ export const DailyPlanPage: React.FC = () => {
   }, [allScheduledItems]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const planRefIds = new Set(planItems.map(i => i.refId));
   
   const backlogTasks = allTasks.filter(t => {
     if (t.status === 'DONE' || t.status === 'ARCHIVED') return false;
-    // Do not show parent task in backlog if it has no sub-tasks, based on new sub-task only rule
-    // This logic is handled inside BacklogDraggableItem now.
     return true; 
   });
 
@@ -89,6 +90,10 @@ export const DailyPlanPage: React.FC = () => {
         setConflict({ active, existingDate: result.existingItem.date });
         return;
       }
+      if(result.status === 'added') {
+        toast("已新增至計畫", { description: `已將項目加入 ${selectedDate} 的計畫中。` });
+        setIsDrawerOpen(false);
+      }
     }
 
     if (active.id !== over.id && active.data.current?.sortable?.containerId === 'daily-plan' && over.data.current?.sortable) {
@@ -107,6 +112,7 @@ export const DailyPlanPage: React.FC = () => {
       const itemToMove = allScheduledItems?.find(item => item.refId === refId);
       if (itemToMove) {
         await moveItem(itemToMove.id, selectedDate);
+        toast("已移動項目", { description: `已將項目從 ${conflict.existingDate} 移動至 ${selectedDate}。` });
       }
       setConflict(null);
     }
@@ -116,50 +122,92 @@ export const DailyPlanPage: React.FC = () => {
     setConflict(null);
   };
 
+  const handleItemTap = async (refId: string, refType: 'TASK' | 'SUBTASK') => {
+    if (isDesktop) return; // Tap-to-add is mobile only
+
+    const result = await addToPlan(refId, refType);
+
+    if (result.status === 'conflict' && result.existingItem) {
+       // On mobile, maybe we just move it? Or show a dialog? For now, let's just add it.
+       // A better UX would be to handle this explicitly. Let's make it a move for now.
+       const itemToMove = allScheduledItems?.find(item => item.refId === refId);
+       if(itemToMove) {
+         await moveItem(itemToMove.id, selectedDate);
+         toast("已移動項目", { description: `已將項目從 ${result.existingItem.date} 移動至 ${selectedDate}。` });
+       }
+    }
+    if(result.status === 'added') {
+      toast("已新增至計畫", { description: `已將項目加入 ${selectedDate} 的計畫中。` });
+    }
+    setIsDrawerOpen(false);
+  }
+
+  const BacklogContent = () => (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="p-4 border-b">
+        <h2 className="text-lg font-bold">待辦清單 (Backlog)</h2>
+      </div>
+      <ScrollArea className="flex-1 p-4">
+        <div className="space-y-3">
+          {backlogTasks.map((task) => (
+            <BacklogDraggableItem 
+              key={task.id} 
+              task={task} 
+              planRefIds={planRefIds} 
+              scheduledMap={scheduledMap} 
+              isDesktop={isDesktop}
+              onItemTap={handleItemTap}
+            />
+          ))}
+          {backlogTasks.length === 0 && (
+            <p className="text-sm text-muted-foreground italic text-center py-8">
+              無待辦任務
+            </p>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+
   return (
     <>
-      <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-120px)]">
-        <DndContext 
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <aside className="w-full md:w-80 flex flex-col gap-4">
-            <Card className="flex-1 flex flex-col overflow-hidden">
-              <CardHeader className="p-4 border-b">
-                <CardTitle className="text-lg font-bold">待辦清單 (Backlog)</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0 flex-1">
-                <ScrollArea className="h-full p-4">
-                  <div className="space-y-3">
-                    {backlogTasks.map((task) => (
-                      <BacklogDraggableItem key={task.id} task={task} planRefIds={planRefIds} scheduledMap={scheduledMap} />
-                    ))}
-                    {backlogTasks.length === 0 && (
-                      <p className="text-sm text-muted-foreground italic text-center py-8">
-                        無待辦任務
-                      </p>
-                    )}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </aside>
-
-          <main className="flex-1 overflow-y-auto">
+      <DndContext 
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex h-[calc(100vh-120px)]">
+          <main className="flex-1 h-full overflow-y-auto pr-4">
             <DailyPlanView selectedDate={selectedDate} onDateChange={setSelectedDate} />
           </main>
 
-          <DragOverlay>
-            {activeId ? (
-              <div className="border rounded-lg p-3 bg-card shadow-xl opacity-80 w-64">
-                正在拖曳項目...
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-      </div>
+          {isDesktop ? (
+            <div className="w-[350px] border-l">
+              <BacklogContent />
+            </div>
+          ) : (
+            <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+              <DrawerTrigger asChild>
+                <Button className="fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-lg z-50">
+                  <Plus className="h-6 w-6" />
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent className="h-[75vh]">
+                  <BacklogContent />
+              </DrawerContent>
+            </Drawer>
+          )}
+        </div>
+
+        <DragOverlay>
+          {activeId ? (
+            <div className="border rounded-lg p-3 bg-card shadow-xl opacity-80 w-72">
+              正在拖曳項目...
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       {conflict && (
         <Dialog open={!!conflict} onOpenChange={handleCancelMove}>
@@ -181,28 +229,27 @@ export const DailyPlanPage: React.FC = () => {
   );
 };
 
-import { useDraggable } from '@dnd-kit/core';
-
-const DraggableItem = ({ id, data, children }: { id: string, data: any, children: React.ReactNode }) => {
+const DraggableItem = ({ id, data, children, isDesktop, onItemTap }: { id: string, data: any, children: React.ReactNode, isDesktop: boolean, onItemTap: () => void }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id,
-    data
+    data,
+    disabled: !isDesktop,
   });
   
-  const style = transform ? {
+  const style = transform && isDesktop ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-    opacity: isDragging ? 0.5 : 1
   } : undefined;
 
+  const eventHandlers = isDesktop ? listeners : { onClick: onItemTap };
+
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+    <div ref={setNodeRef} style={style} {...attributes} {...eventHandlers} className={isDragging ? 'opacity-50' : ''}>
       {children}
     </div>
   );
 };
 
-import { Badge } from '@/components/ui/badge';
-const BacklogDraggableItem = ({ task, planRefIds, scheduledMap }: { task: any, planRefIds: Set<string>, scheduledMap: Map<string, string> }) => {
+const BacklogDraggableItem = ({ task, planRefIds, scheduledMap, isDesktop, onItemTap }: { task: any, planRefIds: Set<string>, scheduledMap: Map<string, string>, isDesktop: boolean, onItemTap: (refId: string, refType: 'TASK' | 'SUBTASK') => void }) => {
   const { subtasks } = useSubTask(task.id);
 
   const visibleSubtasks = subtasks.filter(s => !planRefIds.has(s.id) && !s.isCompleted);
@@ -218,11 +265,17 @@ const BacklogDraggableItem = ({ task, planRefIds, scheduledMap }: { task: any, p
         {visibleSubtasks.map(sub => {
           const scheduledDate = scheduledMap.get(sub.id);
           return (
-            <DraggableItem key={sub.id} id={sub.id} data={{ type: 'BACKLOG_ITEM', refId: sub.id, refType: 'SUBTASK' }}>
-              <div className="p-2 bg-card border rounded shadow-sm text-sm flex justify-between items-center group cursor-grab active:cursor-grabbing">
+            <DraggableItem 
+              key={sub.id} 
+              id={sub.id} 
+              data={{ type: 'BACKLOG_ITEM', refId: sub.id, refType: 'SUBTASK' }}
+              isDesktop={isDesktop}
+              onItemTap={() => onItemTap(sub.id, 'SUBTASK')}
+            >
+              <div className={`p-2 bg-card border rounded shadow-sm text-sm flex justify-between items-center group ${isDesktop ? 'cursor-grab active:cursor-grabbing' : ''}`}>
                 <span className='flex-1 truncate'>{sub.title}</span>
                 <div className='flex items-center gap-2'>
-                  {scheduledDate && (
+                  {scheduledDate && !planRefIds.has(sub.id) && (
                     <Tooltip>
                       <TooltipTrigger onClick={(e) => e.stopPropagation()}>
                         <CalendarIcon className='h-3 w-3 text-muted-foreground' />
