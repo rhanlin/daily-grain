@@ -7,7 +7,9 @@
 
 ## Clarifications
 
-### Session 2026-02-03<--SEP-->- Q: Where should the 'Add from Backlog' button be placed on mobile? → A: Floating Action Button (FAB): Positioned at the bottom-right, but lifted up (e.g., bottom-20) to clear the navigation bar.
+### Session 2026-02-03<--SEP-->- Q: To reliably fix the nested long-press issue, which technical approach do you prefer? → A: Event Flagging: Modify the long-press handlers to use event.defaultPrevented to signal that the event has already been handled by a child.
+- Q: How should 'hidden actions' (Edit/Delete) be exposed on mobile? → A: Long Press to Reveal: On mobile, management actions are triggered by a Long Press gesture, which opens an Action Sheet (Drawer) with options.
+- Q: Where should the 'Add from Backlog' button be placed on mobile? → A: Floating Action Button (FAB): Positioned at the bottom-right, but lifted up (e.g., bottom-20) to clear the navigation bar.
 - Q: How should the Backlog be accessed for a mobile-first UX? → A: Responsive Sheet/Drawer: Use a side-panel (Sheet) on desktop and a bottom-panel (Drawer) on mobile.
 - Q: How to make adding items on mobile more intuitive? → A: Tap-to-Add: Tapping a single item in the backlog drawer instantly adds it to the Daily Plan.
 - Q: New Design Principle → A: User Feedback: All user actions must provide clear and immediate feedback to confirm success or failure (e.g., using toast notifications).
@@ -131,6 +133,8 @@
 - **FR-029**: **移動已排程項目之確認 (Confirm Move of Scheduled Item)**: 當使用者嘗試將一個已排程在 `[舊日期]` 的項目拖曳至 `[新日期]` 時，系統必須彈出一個確認對話框，詢問使用者是否要將該項目從舊日期 **移動** 至新日期。如果確認，則更新該項目的日期；如果取消，則不進行任何變更。
 - **FR-030**: **移動版互動模式 (Mobile Interaction Mode)**: 在移動版（窄螢幕）上，使用者透過 **點擊 (Tap)** 待辦清單中的項目，即可將其新增至當日計畫。新增成功後，系統應給予一個短暫的提示（如 Toast 通知），且抽屜應自動關閉。此模式下，禁用該區域的拖曳功能。
 n- **FR-031**: **浮動動作按鈕 (FAB) 位置**: 「新增計畫項目」按鈕應實作為懸浮在頁面右下角的圓形按鈕。在移動版上，必須透過調整底部間距（如 ）來確保按鈕不會被底部導覽列遮擋，且符合姆指操作熱區。
+n- **FR-032**: **移動版管理動作觸發 (Mobile Management Actions Trigger)**: 在移動版（窄螢幕）上，原本透過 hover 顯示的管理動作（如編輯、刪除、封存）必須改為透過 **長按 (Long Press)** 觸發。長按項目後，應彈出一個 **底部抽屜 (Action Sheet/Drawer)** 顯示所有可用選項。此動作應伴隨適當的視覺回饋以符合 DP-001 原則。
+n- **FR-033**: **全域巢狀互動隔離 (Global Nested Interaction Isolation)**: 所有透過長按 (Long Press) 觸發的管理動作必須檢查  屬性。若子元件已處理該事件並將其標記為已處理（Prevent Default），父元件必須忽略該事件，從而防止多重觸發。
 
 ### Key Entities
 

@@ -3,7 +3,7 @@ import { useCategory } from '@/hooks/useCategory';
 import { type Category } from '@/lib/db';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Plus, Folder, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Folder, Pencil, Trash2, MoreVertical } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent, 
@@ -13,20 +13,32 @@ import {
   DialogFooter,
   DialogDescription
 } from '@/components/ui/dialog';
+import { 
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
 import { TaskList } from '../tasks/TaskList';
+import { useLongPress, useMedia } from 'react-use';
 
 export const CategoryList: React.FC = () => {
   const { categories, createCategory, updateCategory, deleteCategory } = useCategory();
   const [newCatName, setNewCatName] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
+  const isDesktop = useMedia("(min-width: 768px)");
+
   // Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
 
   // Delete State
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  // Action Sheet State
+  const [actionCategory, setActionCategory] = useState<Category | null>(null);
 
   const handleCreate = async () => {
     if (newCatName.trim()) {
@@ -39,6 +51,7 @@ export const CategoryList: React.FC = () => {
   const startEdit = (cat: Category) => {
     setEditingId(cat.id);
     setEditName(cat.name);
+    setActionCategory(null);
   };
 
   const saveEdit = async (id: string) => {
@@ -48,8 +61,9 @@ export const CategoryList: React.FC = () => {
     }
   };
 
-  const handleDeleteClick = (id: string) => {
-    setDeleteId(id);
+  const handleDeleteClick = (cat: Category) => {
+    setDeleteId(cat.id);
+    setActionCategory(null);
   };
 
   const confirmDelete = async () => {
@@ -95,38 +109,18 @@ export const CategoryList: React.FC = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {categories.map((cat) => (
-          <Card key={cat.id} className="hover:border-primary transition-colors group relative">
-            <CardHeader className="p-4 flex flex-row items-center gap-3">
-              <div 
-                className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: cat.color }}
-              />
-              {editingId === cat.id ? (
-                <Input 
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  onBlur={() => saveEdit(cat.id)}
-                  onKeyDown={(e) => e.key === 'Enter' && saveEdit(cat.id)}
-                  autoFocus
-                  className="h-8"
-                />
-              ) : (
-                <CardTitle className="text-base flex-1">{cat.name}</CardTitle>
-              )}
-              
-              <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => startEdit(cat)}>
-                  <Pencil className="h-3 w-3" />
-                </Button>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive" onClick={() => handleDeleteClick(cat.id)}>
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <TaskList categoryId={cat.id} />
-            </CardContent>
-          </Card>
+          <CategoryCard 
+            key={cat.id} 
+            cat={cat} 
+            isDesktop={isDesktop}
+            editingId={editingId}
+            editName={editName}
+            setEditName={setNewCatName}
+            onEdit={() => startEdit(cat)}
+            onDelete={() => handleDeleteClick(cat)}
+            onSave={() => saveEdit(cat.id)}
+            onLongPress={() => !isDesktop && setActionCategory(cat)}
+          />
         ))}
         {categories.length === 0 && (
           <p className="text-sm text-muted-foreground col-span-full">尚未建立任何分類</p>
@@ -147,6 +141,94 @@ export const CategoryList: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Drawer open={!!actionCategory} onOpenChange={(open) => !open && setActionCategory(null)}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>{actionCategory?.name}</DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4 space-y-2">
+            <Button variant="outline" className="w-full justify-start gap-2" onClick={() => actionCategory && startEdit(actionCategory)}>
+              <Pencil className="h-4 w-4" /> 編輯名稱
+            </Button>
+            <Button variant="outline" className="w-full justify-start gap-2 text-destructive" onClick={() => actionCategory && handleDeleteClick(actionCategory)}>
+              <Trash2 className="h-4 w-4" /> 刪除分類
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
+  );
+};
+
+interface CategoryCardProps {
+  cat: Category;
+  isDesktop: boolean;
+  editingId: string | null;
+  editName: string;
+  setEditName: (val: string) => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onSave: () => void;
+  onLongPress: () => void;
+}
+
+const CategoryCard: React.FC<CategoryCardProps> = ({ 
+  cat, isDesktop, editingId, editName, setEditName, onEdit, onDelete, onSave, onLongPress 
+}) => {
+  const onLongPressHandler = useLongPress((e) => {
+    if (e && 'defaultPrevented' in e && e.defaultPrevented) return;
+
+    if (e) {
+      if ('preventDefault' in e) e.preventDefault();
+      if ('stopPropagation' in e) e.stopPropagation();
+    }
+    onLongPress();
+  }, {
+    delay: 500,
+    isPreventDefault: false,
+  });
+
+  return (
+    <Card 
+      {...(isDesktop ? {} : onLongPressHandler)}
+      className="hover:border-primary transition-colors group relative active:scale-95 duration-75"
+    >
+      <CardHeader className="p-4 flex flex-row items-center gap-3">
+        <div 
+          className="w-3 h-3 rounded-full" 
+          style={{ backgroundColor: cat.color }}
+        />
+        {editingId === cat.id ? (
+          <Input 
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onBlur={onSave}
+            onKeyDown={(e) => e.key === 'Enter' && onSave()}
+            autoFocus
+            className="h-8"
+          />
+        ) : (
+          <CardTitle className="text-base flex-1">{cat.name}</CardTitle>
+        )}
+        
+        {isDesktop && (
+          <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onEdit}>
+              <Pencil className="h-3 w-3" />
+            </Button>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive" onClick={onDelete}>
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
+        {!isDesktop && (
+          <MoreVertical className="h-4 w-4 text-muted-foreground opacity-50" />
+        )}
+      </CardHeader>
+      <CardContent>
+        <TaskList categoryId={cat.id} />
+      </CardContent>
+    </Card>
   );
 };

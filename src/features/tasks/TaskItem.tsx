@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { type Task } from '@/lib/db';
 import { useSubTask } from '@/hooks/useSubTask';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,7 @@ import {
   CollapsibleContent, 
   CollapsibleTrigger 
 } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronRight, Archive, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Archive, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
 import { repository } from '@/lib/repository';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,13 @@ import {
   DialogFooter,
   DialogDescription
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import { useLongPress, useMedia } from 'react-use';
 
 interface TaskItemProps {
   task: Task;
@@ -32,20 +39,23 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default' }
   const [isEditing, setIsEditing] = React.useState(false);
   const [editTitle, setEditTitle] = React.useState(task.title);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
+
+  const isDesktop = useMedia("(min-width: 768px)");
 
   const completedCount = subtasks.filter(s => s.isCompleted).length;
   const totalCount = subtasks.length;
 
   const isDone = task.status === 'DONE';
 
-  const handleArchive = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleArchive = async () => {
     await repository.tasks.update(task.id, { status: 'ARCHIVED' });
+    setIsActionSheetOpen(false);
   };
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDeleteClick = () => {
     setIsDeleteDialogOpen(true);
+    setIsActionSheetOpen(false);
   };
 
   const confirmDelete = async () => {
@@ -60,11 +70,36 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default' }
     }
   };
 
+  const startEdit = () => {
+    setIsEditing(true);
+    setIsActionSheetOpen(false);
+  };
+
+  const onLongPress = useLongPress((e) => {
+    if (e && 'defaultPrevented' in e && e.defaultPrevented) return;
+
+    if (!isDesktop && viewMode === 'default') {
+      if (e) {
+        if ('preventDefault' in e) e.preventDefault();
+        if ('stopPropagation' in e) e.stopPropagation();
+      }
+      setIsActionSheetOpen(true);
+    }
+  }, {
+    delay: 500,
+    isPreventDefault: false,
+  });
+
   if (task.status === 'ARCHIVED') return null;
 
   return (
     <>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="border rounded-lg p-3 bg-card shadow-sm transition-opacity group">
+      <Collapsible 
+        open={isOpen} 
+        onOpenChange={setIsOpen} 
+        className="border rounded-lg p-3 bg-card shadow-sm transition-opacity group relative active:bg-accent/5 duration-75"
+        {...(isDesktop ? {} : onLongPress)}
+      >
         <div className={`flex items-center gap-3 ${isDone ? 'opacity-50' : ''}`}>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="p-0 h-6 w-6">
@@ -72,7 +107,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default' }
             </Button>
           </CollapsibleTrigger>
           
-          <div className="flex-1 flex items-center justify-between">
+          <div className="flex-1 flex items-center justify-between overflow-hidden">
             {isEditing && viewMode === 'default' ? (
               <Input 
                 value={editTitle}
@@ -84,20 +119,20 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default' }
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
-              <span className={`font-medium ${isDone ? 'line-through' : ''}`}>
+              <span className={`font-medium truncate ${isDone ? 'line-through' : ''}`}>
                 {task.title}
               </span>
             )}
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
               {totalCount > 0 && (
                 <span className="text-[10px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
                   {completedCount}/{totalCount}
                 </span>
               )}
               <Badge 
-              variant={task.eisenhower.toLowerCase() as 'q1' | 'q2' | 'q3' | 'q4'}
-              className="cursor-pointer hover:brightness-90 transition-all"
+                variant={task.eisenhower.toLowerCase() as 'q1' | 'q2' | 'q3' | 'q4'}
+                className="cursor-pointer hover:brightness-90 transition-all"
                 onClick={async (e) => {
                   e.stopPropagation();
                   const nextValue = repository.utils.cycleEisenhower(task.eisenhower);
@@ -107,13 +142,13 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default' }
                 {task.eisenhower}
               </Badge>
               
-              {viewMode === 'default' && (
+              {isDesktop && viewMode === 'default' && (
                 <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     className="h-6 w-6 p-0"
-                    onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+                    onClick={(e) => { e.stopPropagation(); startEdit(); }}
                   >
                     <Pencil className="h-3 w-3 text-muted-foreground" />
                   </Button>
@@ -121,7 +156,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default' }
                     variant="ghost" 
                     size="sm" 
                     className="h-6 w-6 p-0 text-destructive"
-                    onClick={handleDeleteClick}
+                    onClick={(e) => { e.stopPropagation(); handleDeleteClick(); }}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -129,11 +164,14 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default' }
                     variant="ghost" 
                     size="sm" 
                     className="h-6 w-6 p-0"
-                    onClick={handleArchive}
+                    onClick={(e) => { e.stopPropagation(); handleArchive(); }}
                   >
                     <Archive className="h-3 w-3 text-muted-foreground" />
                   </Button>
                 </div>
+              )}
+              {!isDesktop && viewMode === 'default' && (
+                <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-30" />
               )}
             </div>
           </div>
@@ -158,6 +196,25 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default' }
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Drawer open={isActionSheetOpen} onOpenChange={setIsActionSheetOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>{task.title}</DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4 space-y-2">
+            <Button variant="outline" className="w-full justify-start gap-2" onClick={startEdit}>
+              <Pencil className="h-4 w-4" /> 編輯標題
+            </Button>
+            <Button variant="outline" className="w-full justify-start gap-2" onClick={handleArchive}>
+              <Archive className="h-4 w-4" /> 封存任務
+            </Button>
+            <Button variant="outline" className="w-full justify-start gap-2 text-destructive" onClick={handleDeleteClick}>
+              <Trash2 className="h-4 w-4" /> 刪除任務
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 };

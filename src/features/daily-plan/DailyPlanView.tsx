@@ -10,8 +10,15 @@ import { TaskItem } from '../tasks/TaskItem';
 import { db, type Task } from '@/lib/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useDroppable } from '@dnd-kit/core';
-import { X } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { 
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import { useLongPress, useMedia } from 'react-use';
 
 interface DailyPlanViewProps {
   selectedDate: string;
@@ -21,6 +28,9 @@ interface DailyPlanViewProps {
 export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDateChange }) => {
   const { planItems, triggerRollover, removeFromPlan } = useDailyPlan(selectedDate);
   const [sortByMatrix, setSortByMatrix] = useState(false);
+  const [actionItem, setActionItem] = useState<any | null>(null);
+
+  const isDesktop = useMedia("(min-width: 768px)");
   
   const { setNodeRef } = useDroppable({
     id: 'daily-plan-dropzone',
@@ -64,6 +74,11 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
     return weightA - weightB;
   });
 
+  const handleRemove = (id: string) => {
+    removeFromPlan(id);
+    setActionItem(null);
+  };
+
   return (
     <div className="space-y-6">
       <PlanToolbar 
@@ -79,30 +94,13 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
           strategy={verticalListSortingStrategy}
         >
           {sortedDisplayItems.map((item) => (
-            <DraggableTask key={item.id} id={item.id}>
-              <div className={`relative ${item.isRollover ? 'border-l-4 border-orange-400 pl-2' : ''} bg-background rounded-lg group`}>
-                {item.isRollover && (
-                  <span className="text-[10px] text-orange-500 font-bold uppercase absolute -top-4 left-0">
-                    昨日延宕
-                  </span>
-                )}
-                
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="absolute -top-2 -right-2 h-5 w-5 p-0 rounded-full bg-destructive text-white opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-sm"
-                  onPointerDown={(e) => { e.stopPropagation(); removeFromPlan(item.id); }}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-
-                {item.refType === 'TASK' && item.data ? (
-                  <TaskItem task={item.data as Task} viewMode="daily-plan" />
-                ) : (
-                  <PlanSubTaskItem item={item} />
-                )}
-              </div>
-            </DraggableTask>
+            <PlanItemWrapper 
+              key={item.id} 
+              item={item} 
+              isDesktop={isDesktop} 
+              onRemove={() => handleRemove(item.id)}
+              onLongPress={() => !isDesktop && setActionItem(item)}
+            />
           ))}
         </SortableContext>
 
@@ -113,7 +111,67 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
           </div>
         )}
       </div>
+
+      <Drawer open={!!actionItem} onOpenChange={(open) => !open && setActionItem(null)}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>{actionItem?.data?.title}</DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4 space-y-2">
+            <Button variant="outline" className="w-full justify-start gap-2 text-destructive" onClick={() => handleRemove(actionItem.id)}>
+              <Trash2 className="h-4 w-4" /> 從今日計畫移除
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
+  );
+};
+
+const PlanItemWrapper: React.FC<{ item: any, isDesktop: boolean, onRemove: () => void, onLongPress: () => void }> = ({ item, isDesktop, onRemove, onLongPress }) => {
+  const onLongPressHandler = useLongPress((e) => {
+    if (e && 'defaultPrevented' in e && e.defaultPrevented) return;
+
+    if (e) {
+      if ('preventDefault' in e) e.preventDefault();
+      if ('stopPropagation' in e) e.stopPropagation();
+    }
+    onLongPress();
+  }, {
+    delay: 500,
+    isPreventDefault: false,
+  });
+
+  return (
+    <DraggableTask id={item.id}>
+      <div 
+        {...(isDesktop ? {} : onLongPressHandler)}
+        className={`relative ${item.isRollover ? 'border-l-4 border-orange-400 pl-2' : ''} bg-background rounded-lg group active:bg-accent/5 duration-75`}
+      >
+        {item.isRollover && (
+          <span className="text-[10px] text-orange-500 font-bold uppercase absolute -top-4 left-0">
+            昨日延宕
+          </span>
+        )}
+        
+        {isDesktop && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="absolute -top-2 -right-2 h-5 w-5 p-0 rounded-full bg-destructive text-white opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-sm"
+            onPointerDown={(e) => { e.stopPropagation(); onRemove(); }}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        )}
+
+        {item.refType === 'TASK' && item.data ? (
+          <TaskItem task={item.data as Task} viewMode="daily-plan" />
+        ) : (
+          <PlanSubTaskItem item={item} />
+        )}
+      </div>
+    </DraggableTask>
   );
 };
 
