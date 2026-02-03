@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 export const repository = {
   categories: {
     async getAll() {
-      return await db.categories.filter(c => !c.isArchived).toArray();
+      return await db.categories.filter(c => !c.isArchived).reverse().sortBy('createdAt');
     },
     async create(name: string, color: string) {
       const now = new Date().toISOString();
