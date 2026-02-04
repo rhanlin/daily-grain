@@ -28,20 +28,23 @@ interface QuickCreateTaskDrawerProps {
   children?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  defaultCategoryId?: string;
 }
 
-export const QuickCreateTaskDrawer: React.FC<QuickCreateTaskDrawerProps> = ({ children, open, onOpenChange }) => {
+export const QuickCreateTaskDrawer: React.FC<QuickCreateTaskDrawerProps> = ({ children, open, onOpenChange, defaultCategoryId }) => {
   const [title, setTitle] = useState('');
-  const [categoryId, setCategoryId] = useState<string>('');
+  const [categoryId, setCategoryId] = useState<string>(defaultCategoryId || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const categories = useLiveQuery(() => db.categories.filter(c => !c.isArchived).toArray());
 
   useEffect(() => {
-    if (categories && categories.length > 0 && !categoryId) {
+    if (defaultCategoryId) {
+      setCategoryId(defaultCategoryId);
+    } else if (categories && categories.length > 0 && !categoryId) {
       setCategoryId(categories[0].id);
     }
-  }, [categories, categoryId]);
+  }, [categories, categoryId, defaultCategoryId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

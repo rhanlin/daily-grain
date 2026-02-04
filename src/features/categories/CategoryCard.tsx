@@ -2,17 +2,36 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { CheckCircle2, Circle } from 'lucide-react';
 import type { CategorySummary } from '@/hooks/useCategorySummary';
+import { useLongPress } from 'react-use';
 
 interface CategoryCardProps {
   category: CategorySummary;
   onClick: () => void;
+  onLongPress: () => void;
 }
 
-export const CategoryCard: React.FC<CategoryCardProps> = ({ category, onClick }) => {
+export const CategoryCard: React.FC<CategoryCardProps> = ({ category, onClick, onLongPress }) => {
+  const isLongPressActive = React.useRef(false);
+
+  const longPressProps = useLongPress(() => {
+    isLongPressActive.current = true;
+    onLongPress();
+  }, {
+    delay: 500,
+    isPreventDefault: false,
+  });
+
   return (
     <Card 
-      className="cursor-pointer hover:bg-accent/50 transition-colors active:scale-[0.98]" 
-      onClick={onClick}
+      className="cursor-pointer hover:bg-accent/50 transition-all active:scale-95 active:opacity-80" 
+      onClick={() => {
+        if (isLongPressActive.current) {
+          isLongPressActive.current = false;
+          return;
+        }
+        onClick();
+      }}
+      {...longPressProps}
     >
       <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
         <CardTitle className="text-lg font-bold flex items-center gap-2">

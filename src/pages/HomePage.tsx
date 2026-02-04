@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { CategoryOverview } from '@/features/categories/CategoryOverview';
-import { QuickCreateTaskDrawer } from '@/features/tasks/QuickCreateTaskDrawer';
+import { CreateCategoryDrawer } from '@/features/categories/CreateCategoryDrawer';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isCreateCatOpen, setIsCreateCatOpen] = useState(false);
 
   return (
     <div className="relative pb-24 min-h-[calc(100vh-120px)]">
@@ -22,14 +22,14 @@ export const HomePage: React.FC = () => {
       <Button 
         className="fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-2xl z-50 transition-transform active:scale-95" 
         size="icon"
-        onClick={() => setIsDrawerOpen(true)}
+        onClick={() => setIsCreateCatOpen(true)}
       >
         <Plus className="h-6 w-6" />
       </Button>
 
-      <QuickCreateTaskDrawer 
-        open={isDrawerOpen} 
-        onOpenChange={setIsDrawerOpen} 
+      <CreateCategoryDrawer 
+        open={isCreateCatOpen} 
+        onOpenChange={setIsCreateCatOpen} 
       />
     </div>
   );

@@ -81,7 +81,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default', 
 
     if (!isDesktop) {
       if (e) {
-        if ('preventDefault' in e) e.preventDefault();
+        if ('cancelable' in e && e.cancelable && 'preventDefault' in e) e.preventDefault();
         if ('stopPropagation' in e) e.stopPropagation();
       }
       setIsActionSheetOpen(true);

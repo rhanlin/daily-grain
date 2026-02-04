@@ -163,7 +163,7 @@ const SubTaskRow: React.FC<SubTaskRowProps> = ({
   const onLongPressHandler = useLongPress((e) => {
     // Prevent event from bubbling up to the TaskItem
     if (e) {
-      if ('preventDefault' in e) e.preventDefault();
+      if ('cancelable' in e && e.cancelable && 'preventDefault' in e) e.preventDefault();
       if ('stopPropagation' in e) e.stopPropagation();
     }
     onLongPress();
