@@ -10,6 +10,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - IndexedDB (via Dexie.js) - existing schema sufficien (004-mobile-first-homepage-refactor)
 - TypeScript 5.x, Node.js v24.13.0+ + React 18+, TailwindCSS 4, Shadcn UI (Drawer, Button, Dialog), Lucide React, react-use (for `useLongPress`) (005-category-management-refactor)
 - TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js, dexie-react-hooks (006-sync-backlog-data)
+- TypeScript 5.x, Node.js v24.13.0+ + React 18+, TailwindCSS 4, Lucide React, Radix UI (Scroll Area) (007-matrix-ui-refactor)
+- IndexedDB (via Dexie.js) - existing schema remains unchanged. (007-matrix-ui-refactor)
 
 - TypeScript 5.x, Node.js 20+ (for tooling) + React 18+, Vite, TailwindCSS 4, Shadcn UI, Vites (001-time-allocation-app)
 
@@ -29,9 +31,9 @@ npm test && npm run lint
 TypeScript 5.x, Node.js 20+ (for tooling): Follow standard conventions
 
 ## Recent Changes
+- 007-matrix-ui-refactor: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, TailwindCSS 4, Lucide React, Radix UI (Scroll Area)
 - 006-sync-backlog-data: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js, dexie-react-hooks
 - 005-category-management-refactor: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, TailwindCSS 4, Shadcn UI (Drawer, Button, Dialog), Lucide React, react-use (for `useLongPress`)
-- 004-mobile-first-homepage-refactor: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, TailwindCSS 4, Shadcn UI (Drawer, Button, Dialog), Lucide React, react-use (for useMedia)
 
 
 ## ReactJS Principles

@@ -137,8 +137,8 @@ export const DailyPlanPage: React.FC = () => {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex h-[calc(100vh-120px)]">
-          <main className="flex-1 h-full overflow-y-auto pr-4">
+        <div className="flex h-[calc(100vh-120px)] sm:h-[calc(100vh-57px)]">
+          <main className="flex-1 h-full overflow-y-auto md:pr-4 md:py-2">
             <DailyPlanView selectedDate={selectedDate} onDateChange={setSelectedDate} />
           </main>
 
