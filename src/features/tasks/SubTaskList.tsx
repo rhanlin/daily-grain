@@ -125,16 +125,19 @@ export const SubTaskList: React.FC<SubTaskListProps> = ({ taskId, viewMode = 'de
 
       <Drawer open={!!actionSubTask} onOpenChange={(open) => !open && setActionSubTask(null)}>
         <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{actionSubTask?.title}</DrawerTitle>
-          </DrawerHeader>
-          <div className="p-4 space-y-2">
-            <Button variant="outline" className="w-full justify-start gap-2" onClick={() => actionSubTask && startEdit(actionSubTask)}>
-              <Pencil className="h-4 w-4" /> 編輯標題
-            </Button>
-            <Button variant="outline" className="w-full justify-start gap-2 text-destructive" onClick={() => actionSubTask && handleDeleteClick(actionSubTask)}>
-              <Trash2 className="h-4 w-4" /> 刪除子任務
-            </Button>
+          <div className="mx-auto w-full max-w-sm">
+            <DrawerHeader>
+              <DrawerTitle>{actionSubTask?.title}</DrawerTitle>
+            </DrawerHeader>
+            <div className="p-4 space-y-2">
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base" onClick={() => actionSubTask && startEdit(actionSubTask)}>
+                <Pencil className="h-5 w-5" /> 編輯標題
+              </Button>
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base text-destructive hover:text-destructive" onClick={() => actionSubTask && handleDeleteClick(actionSubTask)}>
+                <Trash2 className="h-5 w-5" /> 刪除子任務
+              </Button>
+            </div>
+            <div className="h-8" />
           </div>
         </DrawerContent>
       </Drawer>

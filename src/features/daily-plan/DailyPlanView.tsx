@@ -131,13 +131,16 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
 
       <Drawer open={!!actionItem} onOpenChange={(open) => !open && setActionItem(null)}>
         <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{actionItem?.data?.title}</DrawerTitle>
-          </DrawerHeader>
-          <div className="p-4 space-y-2">
-            <Button variant="outline" className="w-full justify-start gap-2 text-destructive" onClick={() => handleRemove(actionItem.id)}>
-              <Trash2 className="h-4 w-4" /> 從今日計畫移除
-            </Button>
+          <div className="mx-auto w-full max-w-sm">
+            <DrawerHeader>
+              <DrawerTitle>{actionItem?.data?.title}</DrawerTitle>
+            </DrawerHeader>
+            <div className="p-4 space-y-2">
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base text-destructive hover:text-destructive" onClick={() => handleRemove(actionItem.id)}>
+                <Trash2 className="h-5 w-5" /> 從今日計畫移除
+              </Button>
+            </div>
+            <div className="h-8" />
           </div>
         </DrawerContent>
       </Drawer>

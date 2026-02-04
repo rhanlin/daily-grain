@@ -184,19 +184,22 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default', 
 
       <Drawer open={isActionSheetOpen} onOpenChange={setIsActionSheetOpen}>
         <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{task.title}</DrawerTitle>
-          </DrawerHeader>
-          <div className="p-4 space-y-2">
-            <Button variant="outline" className="w-full justify-start gap-2" onClick={startEdit}>
-              <Pencil className="h-4 w-4" /> 編輯標題
-            </Button>
-            <Button variant="outline" className="w-full justify-start gap-2" onClick={handleArchive}>
-              <Archive className="h-4 w-4" /> 封存任務
-            </Button>
-            <Button variant="outline" className="w-full justify-start gap-2 text-destructive" onClick={handleDeleteClick}>
-              <Trash2 className="h-4 w-4" /> 刪除任務
-            </Button>
+          <div className="mx-auto w-full max-w-sm">
+            <DrawerHeader>
+              <DrawerTitle>{task.title}</DrawerTitle>
+            </DrawerHeader>
+            <div className="p-4 space-y-2">
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base" onClick={startEdit}>
+                <Pencil className="h-5 w-5" /> 編輯標題
+              </Button>
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base" onClick={handleArchive}>
+                <Archive className="h-5 w-5" /> 封存任務
+              </Button>
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base text-destructive hover:text-destructive" onClick={handleDeleteClick}>
+                <Trash2 className="h-5 w-5" /> 刪除任務
+              </Button>
+            </div>
+            <div className="h-8" />
           </div>
         </DrawerContent>
       </Drawer>

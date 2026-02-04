@@ -122,6 +122,7 @@ export const QuickCreateTaskDrawer: React.FC<QuickCreateTaskDrawerProps> = ({ ch
               </DrawerClose>
             </DrawerFooter>
           </form>
+          <div className="h-8" />
         </div>
       </DrawerContent>
     </Drawer>
