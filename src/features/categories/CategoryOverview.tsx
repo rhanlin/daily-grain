@@ -86,10 +86,9 @@ export const CategoryOverview: React.FC<{ onOpenCreateCategory: () => void }> = 
             key={cat.id} 
             category={cat} 
             onClick={() => {
-              // If we are not in long press state, navigate
               navigate(`/category/${cat.id}`);
             }}
-            onLongPress={() => handleLongPress(cat)}
+            onOpenMenu={() => handleLongPress(cat)}
           />
         ))}
       </div>

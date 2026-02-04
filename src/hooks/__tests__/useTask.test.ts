@@ -31,6 +31,7 @@ describe('useTask Hook', () => {
       description: '',
       status: 'TODO',
       eisenhower: 'Q4',
+      createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });
 

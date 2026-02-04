@@ -29,6 +29,7 @@ describe('useCategorySummary', () => {
         description: '',
         status: 'TODO',
         eisenhower: 'Q1',
+        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
       {
@@ -38,6 +39,7 @@ describe('useCategorySummary', () => {
         description: '',
         status: 'DONE',
         eisenhower: 'Q2',
+        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
     ]);

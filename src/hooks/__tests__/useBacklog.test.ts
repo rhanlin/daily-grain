@@ -16,7 +16,7 @@ describe('useBacklog - 過濾優化驗證', () => {
     await db.categories.add(cat1);
 
     // 建立一個沒有子任務的 Task
-    await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Empty Task', status: 'TODO', description: '', eisenhower: 'Q1', updatedAt: '' });
+    await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Empty Task', status: 'TODO', description: '', eisenhower: 'Q1', createdAt: '', updatedAt: '' });
 
     const { result } = renderHook(() => useBacklog('2026-02-03'));
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -29,10 +29,10 @@ describe('useBacklog - 過濾優化驗證', () => {
     const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '' };
     await db.categories.add(cat1);
 
-    await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Task with Subs', status: 'TODO', description: '', eisenhower: 'Q1', updatedAt: '' });
+    await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Task with Subs', status: 'TODO', description: '', eisenhower: 'Q1', createdAt: '', updatedAt: '' });
     await db.subtasks.bulkAdd([
-      { id: 's1', taskId: 't1', title: 'Sub 1', isCompleted: false, eisenhower: 'Q1', updatedAt: '' },
-      { id: 's2', taskId: 't1', title: 'Sub 2', isCompleted: false, eisenhower: 'Q1', updatedAt: '' }
+      { id: 's1', taskId: 't1', title: 'Sub 1', isCompleted: false, eisenhower: 'Q1', createdAt: '', updatedAt: '' },
+      { id: 's2', taskId: 't1', title: 'Sub 2', isCompleted: false, eisenhower: 'Q1', createdAt: '', updatedAt: '' }
     ]);
 
     // 初始狀態應顯示
@@ -58,8 +58,8 @@ describe('useBacklog - 過濾優化驗證', () => {
     const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '' };
     await db.categories.add(cat1);
 
-    await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Task with Subs', status: 'TODO', description: '', eisenhower: 'Q1', updatedAt: '' });
-    await db.subtasks.add({ id: 's1', taskId: 't1', title: 'Sub 1', isCompleted: false, eisenhower: 'Q1', updatedAt: '' });
+    await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Task with Subs', status: 'TODO', description: '', eisenhower: 'Q1', createdAt: '', updatedAt: '' });
+    await db.subtasks.add({ id: 's1', taskId: 't1', title: 'Sub 1', isCompleted: false, eisenhower: 'Q1', createdAt: '', updatedAt: '' });
 
     // s1 被排程在「明天」
     await db.dailyPlanItems.add({ id: 'p1', date: '2026-02-04', refId: 's1', refType: 'SUBTASK', orderIndex: 1, isRollover: false, updatedAt: '' });

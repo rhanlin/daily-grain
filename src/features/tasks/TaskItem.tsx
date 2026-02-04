@@ -155,7 +155,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default', 
                   </Button>
                 </div>
               )}
-              {!isDesktop && (
+              {!isDesktop && viewMode !== 'daily-plan' && (
                 <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-30" onClick={() => setIsActionSheetOpen(true)} />
               )}
             </div>

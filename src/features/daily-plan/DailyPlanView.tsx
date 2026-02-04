@@ -18,8 +18,9 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { useLongPress, useMedia } from 'react-use';
+import { useMedia } from 'react-use';
 import { getLocalToday } from '@/lib/utils';
+import { MoreHorizontal } from 'lucide-react';
 
 interface DailyPlanViewProps {
   selectedDate: string;
@@ -92,6 +93,7 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
 
       <div ref={setNodeRef} className="space-y-2 min-h-[400px] border-2 border-transparent rounded-xl transition-colors">
         <SortableContext 
+          id="daily-plan"
           items={planItems.map(i => i.id)}
           strategy={verticalListSortingStrategy}
         >
@@ -100,8 +102,9 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
               key={item.id} 
               item={item} 
               isDesktop={isDesktop} 
+              disabled={sortByMatrix}
               onRemove={() => handleRemove(item.id)}
-              onLongPress={() => !isDesktop && setActionItem(item)}
+              onOpenMenu={() => setActionItem(item)}
             />
           ))}
         </SortableContext>
@@ -130,25 +133,11 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
   );
 };
 
-const PlanItemWrapper: React.FC<{ item: any, isDesktop: boolean, onRemove: () => void, onLongPress: () => void }> = ({ item, isDesktop, onRemove, onLongPress }) => {
-  const onLongPressHandler = useLongPress((e) => {
-    if (e && 'defaultPrevented' in e && e.defaultPrevented) return;
-
-    if (e) {
-      if ('preventDefault' in e) e.preventDefault();
-      if ('stopPropagation' in e) e.stopPropagation();
-    }
-    onLongPress();
-  }, {
-    delay: 500,
-    isPreventDefault: false,
-  });
-
+const PlanItemWrapper: React.FC<{ item: any, isDesktop: boolean, disabled?: boolean, onRemove: () => void, onOpenMenu: () => void }> = ({ item, isDesktop, disabled, onRemove, onOpenMenu }) => {
   return (
-    <DraggableTask id={item.id}>
+    <DraggableTask id={item.id} disabled={disabled}>
       <div 
-        {...(isDesktop ? {} : onLongPressHandler)}
-        className={`relative ${item.isRollover ? 'border-l-4 border-orange-400 pl-2' : ''} bg-background rounded-lg group active:bg-accent/5 duration-75`}
+        className={`relative flex-1 ${item.isRollover ? 'border-l-4 border-orange-400 pl-2' : ''} bg-background rounded-lg group duration-75`}
       >
         {item.isRollover && (
           <span className="text-[10px] text-orange-500 font-bold uppercase absolute -top-4 left-0">
@@ -170,7 +159,7 @@ const PlanItemWrapper: React.FC<{ item: any, isDesktop: boolean, onRemove: () =>
         {item.refType === 'TASK' && item.data ? (
           <TaskItem task={item.data as Task} viewMode="daily-plan" />
         ) : (
-          <PlanSubTaskItem item={item} />
+          <PlanSubTaskItem item={item} isDesktop={isDesktop} onOpenMenu={onOpenMenu}  />
         )}
       </div>
     </DraggableTask>
@@ -182,7 +171,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useSubTask } from '@/hooks/useSubTask';
 
 // New component specifically for rendering a sub-task within the daily plan
-const PlanSubTaskItem: React.FC<{ item: any }> = ({ item }) => {
+const PlanSubTaskItem: React.FC<{ item: any, isDesktop: boolean, onOpenMenu: () => void }> = ({ item, isDesktop, onOpenMenu }) => {
   const { updateSubTask } = useSubTask(item.parentTask?.id);
 
   if (!item.data || !item.parentTask) {
@@ -204,8 +193,18 @@ const PlanSubTaskItem: React.FC<{ item: any }> = ({ item }) => {
       <span className="text-muted-foreground">/</span>
       <span className={`font-medium flex-1 truncate ${item.data.isCompleted ? 'line-through' : ''}`}>{item.data?.title}</span>
       <Badge variant={(item.data?.eisenhower?.toLowerCase() || 'q4') as 'q1' | 'q2' | 'q3' | 'q4'} className="text-[10px] ml-auto">
-          {item.data?.eisenhower || 'Q4'}
+        {item.data?.eisenhower || 'Q4'}
       </Badge>
+      {!isDesktop && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 text-muted-foreground opacity-40 active:opacity-100"
+          onClick={(e) => { e.stopPropagation(); onOpenMenu(); }}
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 };

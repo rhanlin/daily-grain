@@ -17,6 +17,7 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - N/A (Static Assets) (009-pwa-custom-logo)
 - TypeScript 5.x, Node.js v24.13.0+ + React 18+, TailwindCSS 4, Shadcn UI (Drawer, Button), Lucide React, react-use (for useMedia) (010-add-task-fab)
 - IndexedDB (via Dexie.js) - Schema v2 added `createdAt` field to Tasks/Subtasks. (010-add-task-fab)
+- TypeScript 5.x, Node.js v24.13.0+ + React 18+, dnd-kit, Lucide React, TailwindCSS 4, Shadcn UI (011-daily-plan-drag-optimization)
 
 - TypeScript 5.x, Node.js 20+ (for tooling) + React 18+, Vite, TailwindCSS 4, Shadcn UI, Vites (001-time-allocation-app)
 
@@ -36,9 +37,9 @@ npm test && npm run lint
 TypeScript 5.x, Node.js 20+ (for tooling): Follow standard conventions
 
 ## Recent Changes
-- 010-add-task-fab: Added IndexedDB (via Dexie.js) - Schema v2 added `createdAt` field to Tasks/Subtasks.
-- 010-add-task-fab: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, TailwindCSS 4, Shadcn UI (Drawer, Button), Lucide React, react-use (for useMedia)
-- 010-add-task-fab: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+- 011-daily-plan-drag-optimization: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, dnd-kit, Lucide React, TailwindCSS 4, Shadcn UI
+- 011-daily-plan-drag-optimization: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, dnd-kit, Lucide React, TailwindCSS 4, Shadcn UI
+- 011-daily-plan-drag-optimization: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
 
 ## ReactJS Principles
