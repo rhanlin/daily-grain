@@ -37,7 +37,7 @@ export const CategoryDetailPage: React.FC = () => {
 
       {isMobile && (
         <Button
-          className="fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-2xl z-50 transition-transform active:scale-95"
+          className="fixed bottom-24 right-6 h-12 w-12 rounded-full shadow-2xl z-50 transition-transform active:scale-95"
           size="icon"
           onClick={() => setIsCreateTaskOpen(true)}
         >
