@@ -26,7 +26,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { useLongPress, useMedia } from 'react-use';
+import { useMedia } from 'react-use';
 
 interface TaskItemProps {
   task: Task;
@@ -76,21 +76,6 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default', 
     setIsActionSheetOpen(false);
   };
 
-  const onLongPress = useLongPress((e) => {
-    if (e && 'defaultPrevented' in e && e.defaultPrevented) return;
-
-    if (!isDesktop) {
-      if (e) {
-        if ('cancelable' in e && e.cancelable && 'preventDefault' in e) e.preventDefault();
-        if ('stopPropagation' in e) e.stopPropagation();
-      }
-      setIsActionSheetOpen(true);
-    }
-  }, {
-    delay: 500,
-    isPreventDefault: false,
-  });
-
   if (task.status === 'ARCHIVED') return null;
 
   return (
@@ -99,7 +84,6 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default', 
         open={isOpen} 
         onOpenChange={setIsOpen} 
         className="border rounded-lg p-3 bg-card shadow-sm transition-opacity group relative active:bg-accent/5 duration-75"
-        {...(isDesktop ? {} : onLongPress)}
       >
         <div className={`flex items-center gap-3 ${isDone ? 'opacity-50' : ''}`}>
           <CollapsibleTrigger asChild>
@@ -172,7 +156,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default', 
                 </div>
               )}
               {!isDesktop && (
-                <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-30" />
+                <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-30" onClick={() => setIsActionSheetOpen(true)} />
               )}
             </div>
           </div>
