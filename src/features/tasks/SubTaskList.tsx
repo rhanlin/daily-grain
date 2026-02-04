@@ -21,7 +21,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { useLongPress, useMedia } from 'react-use';
+import { useMedia } from 'react-use';
 
 interface SubTaskListProps {
   taskId: string;
@@ -103,7 +103,7 @@ export const SubTaskList: React.FC<SubTaskListProps> = ({ taskId, viewMode = 'de
             onSave={() => saveEdit(sub.id)}
             onUpdateStatus={(checked) => updateSubTask(sub.id, { isCompleted: checked })}
             onUpdateEisenhower={(val) => repository.subtasks.update(sub.id, { eisenhower: val })}
-            onLongPress={() => !isDesktop && viewMode === 'default' && setActionSubTask(sub)}
+            openAction={() => !isDesktop && viewMode === 'default' && setActionSubTask(sub)}
           />
         ))}
       </div>
@@ -154,27 +154,15 @@ interface SubTaskRowProps {
   onSave: () => void;
   onUpdateStatus: (checked: boolean) => void;
   onUpdateEisenhower: (val: 'Q1' | 'Q2' | 'Q3' | 'Q4') => void;
-  onLongPress: () => void;
+  openAction: () => void;
 }
 
 const SubTaskRow: React.FC<SubTaskRowProps> = ({
-  sub, isDesktop, viewMode, editingId, editTitle, setEditTitle, onEdit, onDelete, onSave, onUpdateStatus, onUpdateEisenhower, onLongPress
+  sub, isDesktop, viewMode, editingId, editTitle, setEditTitle, onEdit, onDelete, onSave, onUpdateStatus, onUpdateEisenhower, openAction
 }) => {
-  const onLongPressHandler = useLongPress((e) => {
-    // Prevent event from bubbling up to the TaskItem
-    if (e) {
-      if ('cancelable' in e && e.cancelable && 'preventDefault' in e) e.preventDefault();
-      if ('stopPropagation' in e) e.stopPropagation();
-    }
-    onLongPress();
-  }, {
-    delay: 500,
-    isPreventDefault: false,
-  });
 
   return (
     <div 
-      {...(isDesktop ? {} : onLongPressHandler)}
       className="flex items-center gap-2 group active:bg-accent/5 duration-75 rounded"
     >
       <Checkbox 
@@ -220,7 +208,7 @@ const SubTaskRow: React.FC<SubTaskRowProps> = ({
           </div>
         )}
         {!isDesktop && viewMode === 'default' && (
-          <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-30" />
+          <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-30" onClick={openAction} />
         )}
       </div>
     </div>
