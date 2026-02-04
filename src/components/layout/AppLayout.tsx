@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, Calendar, ListTodo } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import pkg from '../../../package.json';
 
 export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // const { user, logout, signIn } = useAuth();
@@ -19,9 +20,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
       <header className="border-b px-4 py-3 flex justify-between items-center bg-card sticky top-0 z-50">
         <h1 className="text-xl font-bold tracking-tight">🌾 DailyGrain</h1>
 
-        {/* 暫時隱藏 Auth 功能 */}
-        {/* <div className="flex items-center gap-4">
-          {user ? (
+        <div className="flex items-center gap-4">
+          <label className='text-sm font-light text-muted-foreground'>{`v.${pkg.version}`}</label>
+          {/* 暫時隱藏 Auth 功能 */}
+          {/* {user ? (
             <>
               <span className="text-sm text-muted-foreground hidden sm:inline">
                 {user.displayName}
@@ -33,8 +35,8 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             </>
           ) : (
             <Button size="sm" onClick={signIn}>登入</Button>
-          )}
-        </div> */}
+          )} */}
+        </div>
       </header>
 
       <div className="flex-1 flex overflow-hidden">

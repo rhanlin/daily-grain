@@ -2,7 +2,7 @@
   "name": "daily-grain",
   "description": "Master Your Time, Grain by Grain.",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
