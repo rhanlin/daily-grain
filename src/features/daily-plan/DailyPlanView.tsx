@@ -9,7 +9,7 @@ import { DraggableTask } from '@/components/dnd/DraggableTask';
 import { TaskItem } from '../tasks/TaskItem';
 import { db, type Task } from '@/lib/db';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useDroppable } from '@dnd-kit/core';
+import { useDroppable, useDndContext } from '@dnd-kit/core';
 import { X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -33,10 +33,12 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
   const [sortByMatrix, setSortByMatrix] = useState(false);
   const [actionItem, setActionItem] = useState<any | null>(null);
 
+  const { active } = useDndContext();
   const isDesktop = useMedia("(min-width: 768px)");
   
   const { setNodeRef } = useDroppable({
     id: 'daily-plan-dropzone',
+    disabled: active?.data.current?.type !== 'BACKLOG_ITEM',
   });
 
   useEffect(() => {
@@ -45,6 +47,10 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
       triggerRollover();
     }
   }, [selectedDate, triggerRollover]);
+
+  // Create a stable dependency for the query to prevent unnecessary re-runs
+  // and ensure we don't return a new array reference if the data hasn't changed.
+  const planItemsSignature = JSON.stringify(planItems);
 
   // We need the actual Task/Subtask objects to render
   const resolvedItems = useLiveQuery(async () => {
@@ -63,9 +69,15 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
       results.push({ ...item, data, parentTask });
     }
     return results;
-  }, [planItems]);
+  }, [planItemsSignature]);
 
-  const displayItems = resolvedItems || [];
+  // Keep track of the last valid items to prevent flickering to empty during re-fetches
+  const lastValidItemsRef = React.useRef<any[]>([]);
+  if (resolvedItems) {
+    lastValidItemsRef.current = resolvedItems;
+  }
+  
+  const displayItems = resolvedItems || lastValidItemsRef.current || [];
   
   // Sort by Matrix if toggled
   const sortedDisplayItems = [...displayItems].sort((a, b) => {

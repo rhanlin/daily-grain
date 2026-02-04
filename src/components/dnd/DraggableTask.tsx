@@ -32,7 +32,7 @@ export const DraggableTask: React.FC<DraggableTaskProps> = ({ id, children, disa
         <div 
           {...attributes} 
           {...listeners} 
-          className="cursor-grab active:cursor-grabbing p-1.5 text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors"
+          className="cursor-grab active:cursor-grabbing p-1.5 text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors touch-none"
         >
           <GripVertical className="h-4 w-4" />
         </div>

@@ -4,8 +4,8 @@
 
 ### `onDragStart`
 - **Trigger**: User touches and holds the `DragHandle`.
-- **Pre-condition**: `isMobile` is detected.
-- **Outcome**: Item enters sortable state; visual feedback (scaling/shadow) applied.
+- **Pre-condition**: `isMobile` is detected and `disabled` is false.
+- **Outcome**: Item enters sortable state; visual feedback (scaling/shadow) applied; tactile vibration triggered.
 
 ### `openActionMenu`
 - **Trigger**: Click on `MoreHorizontal` button (replaces long-press).
@@ -14,8 +14,12 @@
 ## Components
 
 ### `DailyPlanItem`
-- **Required UI**: `DragHandle` (Left/Center-Left) and `MoreHorizontal` button (Far Right).
+- **Required UI**: `DragHandle` (Left) and `MoreHorizontal` button (Far Right).
 - **Behavior**: Draggable ONLY via Handle. Menu ONLY via Button.
+
+### `SortableContext`
+- **ID**: must be `'daily-plan'`.
+- **Strategy**: `verticalListSortingStrategy`.
 
 ### `TouchSensor`
 - **Configuration**: Delay 150ms, Tolerance 5px.

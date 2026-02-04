@@ -5,30 +5,28 @@
 
 ## Summary
 
-This feature resolves gesture conflicts in the mobile Daily Plan view by introducing explicit Drag Handles for sorting and replacing unreliable long-press gestures with explicit `MoreHorizontal` menu buttons. It also fixes critical logic conflicts between "Matrix Sorting" and manual reordering.
+This feature resolves gesture and logic conflicts in the Daily Plan view. Technical approach involves migrating from global long-press gestures to explicit `MoreHorizontal` menu buttons, implementing strict drag-handles for sorting, and adding conflict logic to disable manual reordering when automated matrix sorting is enabled.
 
 ## Technical Context
 
 **Language/Version**: TypeScript 5.x, Node.js v24.13.0+
 **Primary Dependencies**: React 18+, dnd-kit, Lucide React, TailwindCSS 4, Shadcn UI
-**Storage**: IndexedDB (via Dexie.js) - existing schema sufficient
+**Storage**: IndexedDB (via Dexie.js) - Schema migration required (add `createdAt` to Task and SubTask for stable sorting).
 **Testing**: npm test (Vitest), Manual verification on mobile DevTools
-**Target Platform**: Mobile Web (PWA)
+**Target Platform**: Mobile Web (PWA focus)
 **Project Type**: Web Application
-**Performance Goals**: Start-to-drag latency < 150ms
-**Constraints**: 
-- Removal of all `useLongPress` hooks to prevent conflicts.
-- Disable manual dragging when `sortByMatrix` is enabled (FR-006).
-- Ensure `SortableContext` uses the `'daily-plan'` container ID (FR-007).
+**Performance Goals**: Start-to-drag latency < 150ms, 60fps animations
+**Constraints**: Global removal of `useLongPress` to prevent conflicts
+**Scale/Scope**: Refactoring task cards in Daily Plan and Task lists.
 
 ## Constitution Check
 
-*GATE: Passed. Re-check after Phase 1 design.*
+*GATE: Passed.*
 
 - **High Quality & Testability**: Refactor ensures clearer event handling and stable container IDs.
-- **Consistent UX**: Global removal of long-press in favor of buttons (SC-004).
+- **Consistent UX**: Global removal of long-press in favor of buttons (Consistent UX Principle).
 - **Performance Centric**: Optimized `TouchSensor` config.
-- **MVP**: Resolves reordering failures and gesture friction reported by user.
+- **MVP**: Resolves the direct friction reported by user.
 - **Traditional Chinese Only**: All UI text stays TC.
 
 ## Project Structure
@@ -38,32 +36,31 @@ This feature resolves gesture conflicts in the mobile Daily Plan view by introdu
 ```text
 specs/011-daily-plan-drag-optimization/
 ├── plan.md              # This file
-├── research.md          # Gesture isolation & Conflict analysis
-├── data-model.md        # Sensor Config
+├── research.md          # Conflict analysis & Resolution decisions
+├── data-model.md        # Sensor Config & State Logic
 ├── quickstart.md        # Verification Steps
-├── contracts/           
-│   └── ui-actions.md    # UI Actions & Component requirements
-└── tasks.md             # Updated tasks
+├── contracts/           # UI Actions & Context synchronization
+└── tasks.md             # Implementation tasks
 ```
 
 ### Source Code (repository root)
 
 ```text
 src/
-├── pages/
-│   └── DailyPlanPage.tsx # Sensor calibration & Drag event handling
 ├── components/
 │   └── dnd/
 │       └── DraggableTask.tsx # Add DragHandle, conditional dragging
 ├── features/
 │   ├── daily-plan/
-│   │   └── DailyPlanView.tsx # Container ID alignment & Matrix sort logic
+│   │   └── DailyPlanView.tsx # Matrix sort logic, Container ID alignment
 │   └── tasks/
-│       ├── TaskItem.tsx    # Responsive menu visibility
-│       └── SubTaskList.tsx # Consistent menu trigger
+│       ├── TaskItem.tsx    # Responsive menu visibility, remove useLongPress
+│       └── SubTaskList.tsx # Consistent menu trigger, remove useLongPress
+└── pages/
+    └── DailyPlanPage.tsx # Sensor calibration (activationConstraint)
 ```
 
-**Structure Decision**: Component-level refactor focusing on event propagation and sorting stability.
+**Structure Decision**: Component-level refactor of existing Daily Plan and Task features.
 
 ## Complexity Tracking
 

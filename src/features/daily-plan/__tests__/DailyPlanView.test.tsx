@@ -42,7 +42,7 @@ vi.mock('@/components/dnd/DraggableTask', () => ({
 }));
 
 vi.mock('dexie-react-hooks', () => ({
-  useLiveQuery: (fn: any) => [{ id: '1', refId: 't1', refType: 'TASK', data: { title: 'Test Task', eisenhower: 'Q1' } }],
+  useLiveQuery: () => [{ id: '1', refId: 't1', refType: 'TASK', data: { title: 'Test Task', eisenhower: 'Q1' } }],
 }));
 
 vi.mock('@dnd-kit/core', () => ({

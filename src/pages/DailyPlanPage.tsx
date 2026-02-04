@@ -63,6 +63,9 @@ export const DailyPlanPage: React.FC = () => {
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
+    if ('vibrate' in navigator) {
+      navigator.vibrate(50);
+    }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -95,6 +98,11 @@ export const DailyPlanPage: React.FC = () => {
     }
   };
 
+  // We need to resolve data for the active item if it's from the plan
+  // Since useLiveQuery is async, we might just show a simplified version or 
+  // use the already resolved displayItems if we lift them up.
+  // For now, let's keep it simple but better than just text.
+
   const handleConfirmMove = async () => {
     if (conflict) {
       const { refId } = conflict.active.data.current as { refId: string };
@@ -120,7 +128,7 @@ export const DailyPlanPage: React.FC = () => {
        const itemToMove = allScheduledItems?.find(item => item.refId === refId);
        if(itemToMove) {
          await moveItem(itemToMove.id, selectedDate);
-         toast("已移動項目", { description: `已將項目從 ${result.existingItem.date} 移動至 ${selectedDate}。` });
+         toast("檢測到衝突", { description: `項目已從 ${result.existingItem.date} 移動至 ${selectedDate}。` });
        }
     }
     if(result.status === 'added') {
@@ -174,10 +182,13 @@ export const DailyPlanPage: React.FC = () => {
           )}
         </div>
 
-        <DragOverlay>
+        <DragOverlay adjustScale={true}>
           {activeId ? (
-            <div className="border rounded-lg p-3 bg-card shadow-xl opacity-80 w-72">
-              正在拖曳項目...
+            <div className="border rounded-lg p-4 bg-card shadow-2xl scale-105 rotate-1 opacity-90 w-72 cursor-grabbing border-primary/50">
+              <div className="flex items-center gap-3">
+                <div className="w-1 h-6 bg-primary rounded-full" />
+                <span className="font-bold text-sm">正在調整排序...</span>
+              </div>
             </div>
           ) : null}
         </DragOverlay>
