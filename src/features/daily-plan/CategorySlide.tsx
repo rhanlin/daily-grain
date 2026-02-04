@@ -4,6 +4,9 @@ import { CalendarIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { useDraggable } from '@dnd-kit/core';
+import { useLongPress } from 'react-use';
+
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface CategorySlideProps {
   category: Category;
@@ -12,6 +15,12 @@ interface CategorySlideProps {
   scheduledMap: Map<string, string>;
   isDesktop: boolean;
   onItemTap: (refId: string, refType: 'TASK' | 'SUBTASK') => void;
+  // Selection Props
+  isSelectionMode?: boolean;
+  selectedIds?: Set<string>;
+  activeCategoryId?: string | null;
+  onToggleSelection?: (subTaskId: string, categoryId: string) => void;
+  onStartSelection?: (subTaskId: string, categoryId: string) => void;
 }
 
 export const CategorySlide: React.FC<CategorySlideProps> = ({
@@ -21,9 +30,17 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
   scheduledMap,
   isDesktop,
   onItemTap,
+  isSelectionMode = false,
+  selectedIds = new Set(),
+  activeCategoryId = null,
+  onToggleSelection,
+  onStartSelection,
 }) => {
+  // FR-003: Lock slides from different categories
+  const isLocked = isSelectionMode && activeCategoryId !== category.id;
+
   return (
-    <div className="space-y-3 h-full">
+    <div className={`space-y-3 h-full transition-all duration-300 ${isLocked ? 'opacity-30 grayscale pointer-events-none' : ''}`}>
       <div className="flex items-center gap-2 px-1">
         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: category.color }} />
         <h3 className="font-bold text-xs uppercase text-muted-foreground truncate">{category.name}</h3>
@@ -38,6 +55,12 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
             scheduledMap={scheduledMap} 
             isDesktop={isDesktop}
             onItemTap={onItemTap}
+            isSelectionMode={isSelectionMode}
+            selectedIds={selectedIds}
+            activeCategoryId={activeCategoryId}
+            onToggleSelection={onToggleSelection}
+            onStartSelection={onStartSelection}
+            categoryId={category.id}
           />
         ))}
         
@@ -47,16 +70,31 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
           .filter(s => !tasks.some(t => t.id === s.taskId))
           .map(sub => {
             const scheduledDate = scheduledMap.get(sub.id);
+            const isSelected = selectedIds.has(sub.id);
+
             return (
               <DraggableItem 
                 key={sub.id} 
                 id={sub.id} 
                 data={{ type: 'BACKLOG_ITEM', refId: sub.id, refType: 'SUBTASK' }}
                 isDesktop={isDesktop}
-                onItemTap={() => onItemTap(sub.id, 'SUBTASK')}
+                onItemTap={() => {
+                  if (isSelectionMode) {
+                    onToggleSelection?.(sub.id, category.id);
+                  } else {
+                    onItemTap(sub.id, 'SUBTASK');
+                  }
+                }}
+                onLongPress={() => onStartSelection?.(sub.id, category.id)}
+                isSelected={isSelected}
               >
-                <div className={`p-2 bg-card border rounded shadow-sm text-sm flex justify-between items-center group ${isDesktop ? 'cursor-grab active:cursor-grabbing' : ''}`}>
-                  <span className='flex-1 truncate'>{sub.title}</span>
+                <div className={`p-2 bg-card border rounded shadow-sm text-sm flex justify-between items-center group transition-all ${isSelected ? 'ring-2 ring-primary border-primary' : ''} ${isDesktop ? 'cursor-grab active:cursor-grabbing' : ''}`}>
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {isSelectionMode && (
+                      <Checkbox checked={isSelected} className="rounded-full" />
+                    )}
+                    <span className='flex-1 truncate'>{sub.title}</span>
+                  </div>
                   <div className='flex items-center gap-2'>
                     {scheduledDate && (
                       <TooltipProvider>
@@ -84,17 +122,34 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
   );
 };
 
-const BacklogTaskItem = ({ task, subtasks, scheduledMap, isDesktop, onItemTap }: { 
+const BacklogTaskItem = ({ 
+  task, 
+  subtasks, 
+  scheduledMap, 
+  isDesktop, 
+  onItemTap,
+  isSelectionMode,
+  selectedIds,
+  onToggleSelection,
+  onStartSelection,
+  categoryId
+}: { 
   task: Task, 
   subtasks: SubTask[],
   scheduledMap: Map<string, string>, 
   isDesktop: boolean, 
-  onItemTap: (refId: string, refType: 'TASK' | 'SUBTASK') => void 
+  onItemTap: (refId: string, refType: 'TASK' | 'SUBTASK') => void,
+  isSelectionMode: boolean,
+  selectedIds: Set<string>,
+  activeCategoryId: string | null,
+  onToggleSelection?: (subTaskId: string, categoryId: string) => void,
+  onStartSelection?: (subTaskId: string, categoryId: string) => void,
+  categoryId: string
 }) => {
   const scheduledDate = scheduledMap.get(task.id);
 
   return (
-    <div className="space-y-2 border rounded-md p-2 bg-secondary/10">
+    <div className="space-y-2 border rounded-md p-2 bg-secondary/10 transition-opacity">
       {/* FR-001: Task header is now non-interactive (disabled: true) */}
       <DraggableItem 
         id={task.id} 
@@ -130,16 +185,31 @@ const BacklogTaskItem = ({ task, subtasks, scheduledMap, isDesktop, onItemTap }:
         <div className="space-y-2 ml-2 border-l-2 pl-2">
           {subtasks.map(sub => {
             const subScheduledDate = scheduledMap.get(sub.id);
+            const isSelected = selectedIds.has(sub.id);
+
             return (
               <DraggableItem 
                 key={sub.id} 
                 id={sub.id} 
                 data={{ type: 'BACKLOG_ITEM', refId: sub.id, refType: 'SUBTASK' }}
                 isDesktop={isDesktop}
-                onItemTap={() => onItemTap(sub.id, 'SUBTASK')}
+                onItemTap={() => {
+                  if (isSelectionMode) {
+                    onToggleSelection?.(sub.id, categoryId);
+                  } else {
+                    onItemTap(sub.id, 'SUBTASK');
+                  }
+                }}
+                onLongPress={() => onStartSelection?.(sub.id, categoryId)}
+                isSelected={isSelected}
               >
-                <div className={`p-2 bg-card border rounded shadow-sm text-sm flex justify-between items-center group ${isDesktop ? 'cursor-grab active:cursor-grabbing' : ''}`}>
-                  <span className='flex-1 truncate'>{sub.title}</span>
+                <div className={`p-2 bg-card border rounded shadow-sm text-sm flex justify-between items-center group transition-all ${isSelected ? 'ring-2 ring-primary border-primary' : ''} ${isDesktop ? 'cursor-grab active:cursor-grabbing' : ''}`}>
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {isSelectionMode && (
+                      <Checkbox checked={isSelected} className="rounded-full" />
+                    )}
+                    <span className='flex-1 truncate'>{sub.title}</span>
+                  </div>
                   <div className='flex items-center gap-2'>
                     {subScheduledDate && (
                       <TooltipProvider>
@@ -167,25 +237,62 @@ const BacklogTaskItem = ({ task, subtasks, scheduledMap, isDesktop, onItemTap }:
   );
 };
 
-const DraggableItem = ({ id, data, children, isDesktop, onItemTap }: { id: string, data: any, children: React.ReactNode, isDesktop: boolean, onItemTap: () => void }) => {
+const DraggableItem = ({ 
+  id, 
+  data, 
+  children, 
+  isDesktop, 
+  onItemTap, 
+  onLongPress, 
+  isSelected,
+  className 
+}: { 
+  id: string, 
+  data: any, 
+  children: React.ReactNode, 
+  isDesktop: boolean, 
+  onItemTap: () => void,
+  onLongPress?: () => void,
+  isSelected?: boolean,
+  className?: string
+}) => {
   // T006: Set disabled: true when refType is 'TASK'
   const isDisabled = data.refType === 'TASK';
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id,
     data,
-    disabled: !isDesktop || isDisabled,
+    disabled: !isDesktop || isDisabled || isSelected, // Disable drag if selected or mobile/task
   });
   
   const style = transform && isDesktop && !isDisabled ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   } : undefined;
 
+  // FR-001: Integration of useLongPress for mobile selection
+  const longPress = useLongPress(() => {
+    if (!isDesktop && !isDisabled) {
+      onLongPress?.();
+    }
+  }, {
+    delay: 500,
+    isPreventDefault: false,
+  });
+
   // FR-007: onItemTap will be empty for TASK headers, preventing any action
-  const eventHandlers = (isDesktop && !isDisabled) ? listeners : { onClick: onItemTap };
+  const eventHandlers = (isDesktop && !isDisabled) ? listeners : { 
+    onClick: onItemTap,
+    ...(!isDesktop && !isDisabled ? longPress : {})
+  };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...eventHandlers} className={isDragging ? 'opacity-50' : ''}>
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      {...attributes} 
+      {...eventHandlers} 
+      className={`${isDragging ? 'opacity-50' : ''} ${className || ''}`}
+    >
       {children}
     </div>
   );
