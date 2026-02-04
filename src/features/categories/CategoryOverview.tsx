@@ -51,7 +51,7 @@ export const CategoryOverview: React.FC<{ onOpenCreateCategory: () => void }> = 
     );
   }
 
-  const handleLongPress = (cat: CategorySummary) => {
+  const handleOpenMenu = (cat: CategorySummary) => {
     setSelectedCategory(cat);
     setIsActionDrawerOpen(true);
   };
@@ -88,7 +88,7 @@ export const CategoryOverview: React.FC<{ onOpenCreateCategory: () => void }> = 
             onClick={() => {
               navigate(`/category/${cat.id}`);
             }}
-            onOpenMenu={() => handleLongPress(cat)}
+            onOpenMenu={() => handleOpenMenu(cat)}
           />
         ))}
       </div>
