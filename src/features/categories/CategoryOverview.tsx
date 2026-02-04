@@ -19,6 +19,20 @@ export const CategoryOverview: React.FC = () => {
   const [isEditDialogOpen, setIsEditOpen] = useState(false);
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
 
+  // FR-007: 捲動恢復保障 (Scroll Restoration)
+  // 當所有對話框關閉時，確保 body 的 pointer-events 恢復正常
+  React.useEffect(() => {
+    if (!isActionDrawerOpen && !isEditDialogOpen && !isAddTaskOpen) {
+      // 延遲執行，確保 Radix UI 的清理完成後我們再做最後檢查
+      const timer = setTimeout(() => {
+        if (document.body.style.pointerEvents === 'none') {
+          document.body.style.pointerEvents = 'auto';
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isActionDrawerOpen, isEditDialogOpen, isAddTaskOpen]);
+
   if (summaries === undefined) {
     return <div className="p-8 text-center text-muted-foreground animate-pulse">載入中...</div>;
   }
