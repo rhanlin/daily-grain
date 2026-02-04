@@ -3,7 +3,6 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
-  DrawerDescription,
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
@@ -80,8 +79,7 @@ export const QuickCreateTaskDrawer: React.FC<QuickCreateTaskDrawerProps> = ({ ch
       <DrawerContent>
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
-            <DrawerTitle>快速新增任務</DrawerTitle>
-            <DrawerDescription>輸入任務名稱與選擇分類即可快速建立。</DrawerDescription>
+            <DrawerTitle>新增任務</DrawerTitle>
           </DrawerHeader>
           <form onSubmit={handleSubmit} className="p-4 space-y-6">
             <div className="space-y-4">

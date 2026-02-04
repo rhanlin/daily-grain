@@ -3,7 +3,6 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
-  DrawerDescription,
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
@@ -64,7 +63,6 @@ export const CreateCategoryDrawer: React.FC<CreateCategoryDrawerProps> = ({ chil
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
             <DrawerTitle>新增分類</DrawerTitle>
-            <DrawerDescription>建立一個新的分類來組織您的任務。</DrawerDescription>
           </DrawerHeader>
           <form onSubmit={handleSubmit} className="p-4 space-y-6">
             <div className="space-y-4">
