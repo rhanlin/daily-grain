@@ -11,22 +11,29 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['icons/apple-touch-icon.webp', 'icons/maskable-icon.webp'],
       manifest: {
         name: 'DailyGrain',
         short_name: 'DailyGrain',
         description: 'Master Your Time, Grain by Grain.',
         theme_color: '#ffffff',
+        background_color: '#ffffff',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'icons/icon-192x192.webp',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icons/icon-512x512.webp',
             sizes: '512x512',
             type: 'image/png'
+          },
+          {
+            src: 'icons/maskable-icon.webp',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       }
