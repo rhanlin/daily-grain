@@ -37,6 +37,7 @@ export const DailyPlanDateSelector: React.FC<DailyPlanDateSelectorProps> = ({
       onSelect={handleSelect}
       locale={zhTW}
       initialFocus
+      className='w-full'
     />
   );
 
