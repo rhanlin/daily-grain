@@ -13,9 +13,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'Personal Time Allocation App',
-        short_name: 'TimeApp',
-        description: 'Personal time allocation using Eisenhower Matrix',
+        name: 'DailyGrain',
+        short_name: 'DailyGrain',
+        description: 'Master Your Time, Grain by Grain.',
         theme_color: '#ffffff',
         icons: [
           {

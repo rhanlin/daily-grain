@@ -17,7 +17,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="border-b px-4 py-3 flex justify-between items-center bg-card sticky top-0 z-50">
-        <h1 className="text-xl font-bold tracking-tight">P-Note</h1>
+        <h1 className="text-xl font-bold tracking-tight">🌾 DailyGrain</h1>
         <div className="flex items-center gap-4">
           {user ? (
             <>

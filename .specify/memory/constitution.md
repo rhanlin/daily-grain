@@ -8,7 +8,7 @@ Templates Status:
 - .specify/templates/tasks-template.md: ✅ (Logic aligns)
 -->
 
-# P-Note 專案憲章 (Project Constitution)
+# DailyGrain 專案憲章 (Project Constitution)
 
 ## 核心原則 (Core Principles)
 
@@ -43,7 +43,7 @@ Templates Status:
 
 ## 治理 (Governance)
 
-本憲章為 P-Note 專案的最高指導原則。所有功能規格 (Spec)、計畫 (Plan) 與實作任務 (Task) 皆不得牴觸本憲章。
+本憲章為 DailyGrain 專案的最高指導原則。所有功能規格 (Spec)、計畫 (Plan) 與實作任務 (Task) 皆不得牴觸本憲章。
 任何對原則的修改必須經過團隊討論，並依據版本號規則更新本文件。所有 PR 與設計文件必須明確展示如何符合上述原則。
 
 **Version**: 1.1.0 | **Ratified**: 2026-02-01 | **Last Amended**: 2026-02-01
