@@ -6,8 +6,11 @@ import { MatrixPage } from '@/pages/MatrixPage';
 import { DailyPlanPage } from '@/pages/DailyPlanPage';
 import { CategoryDetailPage } from '@/pages/CategoryDetailPage';
 import { Toaster } from '@/components/ui/sonner';
+import { useMedia } from 'react-use';
 
 function App() {
+  const isDesktop = useMedia('(min-width: 768px)', true);
+
   return (
     <AuthProvider>
       <Router>
@@ -18,7 +21,7 @@ function App() {
             <Route path="/daily-plan" element={<DailyPlanPage />} />
             <Route path="/category/:categoryId" element={<CategoryDetailPage />} />
           </Routes>
-          <Toaster />
+          <Toaster position={isDesktop ? 'bottom-right': 'top-center'} duration={1500}/>
         </AppLayout>
       </Router>
     </AuthProvider>
