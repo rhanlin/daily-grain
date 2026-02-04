@@ -1,11 +1,11 @@
 import React from 'react';
-import { useAuth } from '@/features/auth/AuthContext';
+// import { useAuth } from '@/features/auth/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, LayoutGrid, Calendar, ListTodo } from 'lucide-react';
+import { LayoutGrid, Calendar, ListTodo } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, logout, signIn } = useAuth();
+  // const { user, logout, signIn } = useAuth();
   const location = useLocation();
 
   const navItems = [
@@ -18,7 +18,9 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="border-b px-4 py-3 flex justify-between items-center bg-card sticky top-0 z-50">
         <h1 className="text-xl font-bold tracking-tight">🌾 DailyGrain</h1>
-        <div className="flex items-center gap-4">
+
+        {/* 暫時隱藏 Auth 功能 */}
+        {/* <div className="flex items-center gap-4">
           {user ? (
             <>
               <span className="text-sm text-muted-foreground hidden sm:inline">
@@ -32,7 +34,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
           ) : (
             <Button size="sm" onClick={signIn}>登入</Button>
           )}
-        </div>
+        </div> */}
       </header>
 
       <div className="flex-1 flex overflow-hidden">
