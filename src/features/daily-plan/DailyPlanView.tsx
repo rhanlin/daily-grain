@@ -24,9 +24,10 @@ import { getLocalToday } from '@/lib/utils';
 interface DailyPlanViewProps {
   selectedDate: string;
   onDateChange: (date: string) => void;
+  openDrawer: () => void;
 }
 
-export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDateChange }) => {
+export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDateChange, openDrawer }) => {
   const { planItems, triggerRollover, removeFromPlan } = useDailyPlan(selectedDate);
   const [sortByMatrix, setSortByMatrix] = useState(false);
   const [actionItem, setActionItem] = useState<any | null>(null);
@@ -106,9 +107,9 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
         </SortableContext>
 
         {displayItems.length === 0 && (
-          <div className="text-center py-12 border-2 border-dashed rounded-xl">
+          <div className="text-center py-12 border-2 border-dashed rounded-xl" onClick={openDrawer}>
             <p className="text-muted-foreground italic">今日尚無計畫項目</p>
-            <p className="text-xs text-muted-foreground">{`從${isDesktop ? '左側' : '底部'}`}「待辦清單」中拖入項目來規劃今天吧！</p>
+            <p className="text-xs text-muted-foreground">點擊展開「待辦清單」新增項目</p>
           </div>
         )}
       </div>

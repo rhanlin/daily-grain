@@ -139,7 +139,7 @@ export const DailyPlanPage: React.FC = () => {
       >
         <div className="flex py-2 h-[calc(100vh-120px)] sm:h-[calc(100vh-57px)]">
           <main className="flex-1 h-full overflow-y-auto md:pr-4 md:py-2">
-            <DailyPlanView selectedDate={selectedDate} onDateChange={setSelectedDate} />
+            <DailyPlanView selectedDate={selectedDate} onDateChange={setSelectedDate} openDrawer={() => setIsDrawerOpen(true)} />
           </main>
 
           {isDesktop ? (
