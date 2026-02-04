@@ -1,20 +1,36 @@
-import { CategoryList } from '@/features/categories/CategoryList';
-import { CreateTaskForm } from '@/features/tasks/CreateTaskForm';
-import { Separator } from '@/components/ui/separator';
+import React, { useState } from 'react';
+import { CategoryOverview } from '@/features/categories/CategoryOverview';
+import { QuickCreateTaskDrawer } from '@/features/tasks/QuickCreateTaskDrawer';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold">快速新增任務</h2>
-        <CreateTaskForm />
-      </section>
-      
-      <Separator />
+    <div className="relative pb-24 min-h-[calc(100vh-120px)]">
+      <header className="mb-8">
+        <h1 className="text-3xl font-extrabold tracking-tight">分類概覽</h1>
+        <p className="text-muted-foreground">組織您的所有任務與目標。</p>
+      </header>
 
       <section>
-        <CategoryList />
+        <CategoryOverview />
       </section>
+
+      {/* Floating Action Button */}
+      <Button 
+        className="fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-2xl z-50 transition-transform active:scale-95" 
+        size="icon"
+        onClick={() => setIsDrawerOpen(true)}
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
+
+      <QuickCreateTaskDrawer 
+        open={isDrawerOpen} 
+        onOpenChange={setIsDrawerOpen} 
+      />
     </div>
   );
 };

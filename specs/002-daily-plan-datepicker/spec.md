@@ -31,9 +31,9 @@
 ### Functional Requirements
 
 - **FR-001**: **點擊觸發 (Click Trigger)**: 每日計劃頁面的頂部日期標題必須是可點擊的 (Clickable)。
-- **FR-002**: **移動版互動 (Mobile Interaction)**: 在移動裝置上，點擊日期應開啟一個 **抽屜 (Drawer)**，內含月曆選擇器，以保持與待辦清單 (Backlog) 的操作體驗一致。
+- **FR-002**: **移動版互動 (Mobile Interaction)**: 在移動裝置上，點擊日期應開啟一個 **抽屜 (Drawer)**，內含月曆選擇器，以保持與任務清單 (Backlog) 的操作體驗一致。
 - **FR-003**: **桌面版互動 (Desktop Interaction)**: 在桌面裝置上，點擊日期應開啟一個 **浮動視窗 (Popover)**，內含月曆選擇器。
-- **FR-004**: **日期更新 (Date Update)**: 選擇日期後，系統必須更新 `selectedDate` 狀態，並連動更新每日計劃列表與待辦清單 (Backlog) 的過濾邏輯。
+- **FR-004**: **日期更新 (Date Update)**: 選擇日期後，系統必須更新 `selectedDate` 狀態，並連動更新每日計劃列表與任務清單 (Backlog) 的過濾邏輯。
 - **FR-005**: **當前日期標示 (Current Selection)**: 月曆開啟時，應預設選中並標示目前頁面所顯示的日期。
 - **FR-006**: **視覺回饋 (Visual Feedback)**: 頂部日期標題應有適當的 Hover/Active 樣式 (如底色變化或圖示)，提示其可點擊性。
 

@@ -107,7 +107,7 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
         {displayItems.length === 0 && (
           <div className="text-center py-12 border-2 border-dashed rounded-xl">
             <p className="text-muted-foreground italic">今日尚無計畫項目</p>
-            <p className="text-xs text-muted-foreground">從左側「待辦清單」中拖入項目來規劃今天吧！</p>
+            <p className="text-xs text-muted-foreground">{`從${isDesktop ? '左側' : '底部'}`}「待辦清單」中拖入項目來規劃今天吧！</p>
           </div>
         )}
       </div>

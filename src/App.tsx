@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { HomePage } from '@/pages/HomePage';
 import { MatrixPage } from '@/pages/MatrixPage';
 import { DailyPlanPage } from '@/pages/DailyPlanPage';
+import { CategoryDetailPage } from '@/pages/CategoryDetailPage';
 import { Toaster } from '@/components/ui/sonner';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/matrix" element={<MatrixPage />} />
             <Route path="/daily-plan" element={<DailyPlanPage />} />
+            <Route path="/category/:categoryId" element={<CategoryDetailPage />} />
           </Routes>
           <Toaster />
         </AppLayout>

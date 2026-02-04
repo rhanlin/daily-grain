@@ -9,7 +9,7 @@
 
 ### User Story 1 - 移動版 Backlog 輪播瀏覽 (Mobile Backlog Carousel) (Priority: P1)
 
-使用者在移動裝置上開啟待辦清單 (Backlog) 抽屜時，能以左右滑動 (Carousel) 的方式在不同主題分類 (Category) 間切換，快速找到特定類別下的任務。
+使用者在移動裝置上開啟任務清單 (Backlog) 抽屜時，能以左右滑動 (Carousel) 的方式在不同主題分類 (Category) 間切換，快速找到特定類別下的任務。
 
 **Why this priority**: 提升移動端的瀏覽效率，避免長列表導致的過度捲動，並提供直覺的手勢操作。
 
@@ -56,7 +56,7 @@
 ### Key Entities
 
 - **Category**: 任務的分類實體，用於分組。
-- **Task**: 待辦任務實體。
+- **Task**: 任務任務實體。
 
 ## Success Criteria *(mandatory)*
 

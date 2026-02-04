@@ -30,12 +30,13 @@ import { useLongPress, useMedia } from 'react-use';
 
 interface TaskItemProps {
   task: Task;
-  viewMode?: 'default' | 'daily-plan';
+  viewMode?: 'default' | 'daily-plan' | 'category-detail';
+  defaultOpen?: boolean;
 }
 
-export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default' }) => {
+export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default', defaultOpen = false }) => {
   const { subtasks } = useSubTask(task.id);
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(defaultOpen);
   const [isEditing, setIsEditing] = React.useState(false);
   const [editTitle, setEditTitle] = React.useState(task.title);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
@@ -78,7 +79,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default' }
   const onLongPress = useLongPress((e) => {
     if (e && 'defaultPrevented' in e && e.defaultPrevented) return;
 
-    if (!isDesktop && viewMode === 'default') {
+    if (!isDesktop) {
       if (e) {
         if ('preventDefault' in e) e.preventDefault();
         if ('stopPropagation' in e) e.stopPropagation();
@@ -108,7 +109,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default' }
           </CollapsibleTrigger>
           
           <div className="flex-1 flex items-center justify-between overflow-hidden">
-            {isEditing && viewMode === 'default' ? (
+            {isEditing ? (
               <Input 
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
@@ -142,7 +143,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default' }
                 {task.eisenhower}
               </Badge>
               
-              {isDesktop && viewMode === 'default' && (
+              {isDesktop && (
                 <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button 
                     variant="ghost" 
@@ -170,7 +171,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default' }
                   </Button>
                 </div>
               )}
-              {!isDesktop && viewMode === 'default' && (
+              {!isDesktop && (
                 <MoreHorizontal className="h-4 w-4 text-muted-foreground opacity-30" />
               )}
             </div>
@@ -178,7 +179,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default' }
         </div>
 
         <CollapsibleContent>
-          <SubTaskList taskId={task.id} viewMode={viewMode} />
+          <SubTaskList taskId={task.id} viewMode={viewMode === 'category-detail' ? 'default' : viewMode} />
         </CollapsibleContent>
       </Collapsible>
 

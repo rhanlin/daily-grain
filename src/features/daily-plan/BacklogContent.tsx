@@ -34,7 +34,7 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
   if (groups.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center p-4">
-        <p className="text-sm text-muted-foreground italic">無待辦任務</p>
+        <p className="text-sm text-muted-foreground italic">無任務任務</p>
       </div>
     );
   }
@@ -49,7 +49,7 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
     return (
       <div className="flex-1 flex flex-col overflow-hidden h-full">
         <div className="p-4 border-b">
-          <h2 className="text-lg font-bold text-foreground">待辦清單 (Backlog)</h2>
+          <h2 className="text-lg font-bold text-foreground">任務清單 (Backlog)</h2>
         </div>
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-8 pb-20">
@@ -75,7 +75,7 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
   return (
     <div className="flex-1 flex flex-col overflow-hidden h-full">
       <div className="p-4 border-b flex justify-between items-center bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
-        <h2 className="text-lg font-bold text-foreground">待辦清單</h2>
+        <h2 className="text-lg font-bold text-foreground">任務清單</h2>
         <div className="text-[10px] font-medium bg-secondary px-2 py-0.5 rounded-full">
           {Math.max(0, activeIndex - 1) + 1} / {groups.length}
         </div>
