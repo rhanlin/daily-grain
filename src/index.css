@@ -116,6 +116,9 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    user-select: none;
+    -webkit-user-select: none; /* Chrome Safari */        
+    -moz-user-select: none;    /* Firefox */
   }
   body {
     @apply bg-background text-foreground;
