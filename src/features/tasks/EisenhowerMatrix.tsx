@@ -70,17 +70,17 @@ export const EisenhowerMatrix: React.FC = () => {
 
       <div className="flex-1 flex gap-0 min-h-0">
         {/* Y-Axis Label: 重要度 (Importance) - No padding, edge-to-edge */}
-        <div className="flex flex-row justify-around text-[8px] sm:text-[10px] font-bold text-muted-foreground/50 uppercase [writing-mode:vertical-lr] pr-2 select-none">
-          <span className="text-center">重要 (Important)</span>
-          <span className="text-center">不重要 (Not Important)</span>
+        <div className="flex flex-row justify-around text-[10px] font-bold text-muted-foreground/50 uppercase [writing-mode:vertical-lr] pr-2 select-none">
+          <span className="text-center">重要</span>
+          <span className="text-center">不重要</span>
         </div>
 
         <div className="flex-1 flex flex-col gap-0 min-h-0">
 
           {/* X-Axis Label: 緊急度 (Urgency) */}
-          <div className="flex justify-around text-[8px] sm:text-[10px] font-bold text-muted-foreground/50 uppercase px-4 py-1 select-none">
-            <span className="text-center">緊急 (Urgent)</span>
-            <span className="text-center">不緊急 (Not Urgent)</span>
+          <div className="flex justify-around text-[10px] font-bold text-muted-foreground/50 uppercase px-4 py-1 select-none">
+            <span className="text-center">緊急</span>
+            <span className="text-center">不緊急</span>
           </div>
 
           <div className="grid grid-cols-2 grid-rows-2 gap-px bg-border border-y sm:border-x sm:rounded-xl overflow-hidden flex-1 min-h-0 shadow-sm">
