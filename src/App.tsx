@@ -21,7 +21,11 @@ function App() {
             <Route path="/daily-plan" element={<DailyPlanPage />} />
             <Route path="/category/:categoryId" element={<CategoryDetailPage />} />
           </Routes>
-          <Toaster position={isDesktop ? 'bottom-right': 'top-center'} duration={1500}/>
+          <Toaster 
+            theme="light"
+            position={isDesktop ? 'bottom-right': 'top-center'} 
+            duration={1500}
+          />
         </AppLayout>
       </Router>
     </AuthProvider>
