@@ -9,7 +9,6 @@ interface CategorySlideProps {
   category: Category;
   tasks: Task[];
   subtasks: SubTask[];
-  planRefIds: Set<string>;
   scheduledMap: Map<string, string>;
   isDesktop: boolean;
   onItemTap: (refId: string, refType: 'TASK' | 'SUBTASK') => void;
@@ -19,7 +18,6 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
   category,
   tasks,
   subtasks,
-  planRefIds,
   scheduledMap,
   isDesktop,
   onItemTap,
@@ -30,70 +28,141 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: category.color }} />
         <h3 className="font-bold text-xs uppercase text-muted-foreground truncate">{category.name}</h3>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-4">
+        {/* Render tasks that are directly in the category backlog */}
         {tasks.map((task) => (
           <BacklogTaskItem 
             key={task.id} 
             task={task} 
             subtasks={subtasks.filter(s => s.taskId === task.id)}
-            planRefIds={planRefIds} 
             scheduledMap={scheduledMap} 
             isDesktop={isDesktop}
             onItemTap={onItemTap}
           />
         ))}
+        
+        {/* Render subtasks whose parent tasks might NOT be in the backlog tasks list (e.g. parent task is archived or scheduled) */}
+        {/* But they must belong to this category */}
+        {subtasks
+          .filter(s => !tasks.some(t => t.id === s.taskId))
+          .map(sub => {
+            const scheduledDate = scheduledMap.get(sub.id);
+            return (
+              <DraggableItem 
+                key={sub.id} 
+                id={sub.id} 
+                data={{ type: 'BACKLOG_ITEM', refId: sub.id, refType: 'SUBTASK' }}
+                isDesktop={isDesktop}
+                onItemTap={() => onItemTap(sub.id, 'SUBTASK')}
+              >
+                <div className={`p-2 bg-card border rounded shadow-sm text-sm flex justify-between items-center group ${isDesktop ? 'cursor-grab active:cursor-grabbing' : ''}`}>
+                  <span className='flex-1 truncate'>{sub.title}</span>
+                  <div className='flex items-center gap-2'>
+                    {scheduledDate && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger onClick={(e) => e.stopPropagation()}>
+                            <CalendarIcon className='h-3 w-3 text-muted-foreground' />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>已排程於 {scheduledDate}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                    <Badge variant={(sub.eisenhower?.toLowerCase() || 'q4') as any} className="text-[8px] px-1 py-0 h-4">
+                      {sub.eisenhower || 'Q4'}
+                    </Badge>
+                  </div>
+                </div>
+              </DraggableItem>
+            );
+          })
+        }
       </div>
     </div>
   );
 };
 
-const BacklogTaskItem = ({ task, subtasks, planRefIds, scheduledMap, isDesktop, onItemTap }: { 
-  task: any, 
+const BacklogTaskItem = ({ task, subtasks, scheduledMap, isDesktop, onItemTap }: { 
+  task: Task, 
   subtasks: SubTask[],
-  planRefIds: Set<string>, 
   scheduledMap: Map<string, string>, 
   isDesktop: boolean, 
   onItemTap: (refId: string, refType: 'TASK' | 'SUBTASK') => void 
 }) => {
-  if (subtasks.length === 0) return null;
+  const scheduledDate = scheduledMap.get(task.id);
 
   return (
-    <TooltipProvider>
-      <div className="space-y-2 border rounded-md p-2 bg-secondary/10">
-        <p className="text-[10px] font-bold text-muted-foreground/70 uppercase px-1 truncate">{task.title}</p>
-        {subtasks.map(sub => {
-          const scheduledDate = scheduledMap.get(sub.id);
-          return (
-            <DraggableItem 
-              key={sub.id} 
-              id={sub.id} 
-              data={{ type: 'BACKLOG_ITEM', refId: sub.id, refType: 'SUBTASK' }}
-              isDesktop={isDesktop}
-              onItemTap={() => onItemTap(sub.id, 'SUBTASK')}
-            >
-              <div className={`p-2 bg-card border rounded shadow-sm text-sm flex justify-between items-center group ${isDesktop ? 'cursor-grab active:cursor-grabbing' : ''}`}>
-                <span className='flex-1 truncate'>{sub.title}</span>
-                <div className='flex items-center gap-2'>
-                  {scheduledDate && !planRefIds.has(sub.id) && (
-                    <Tooltip>
-                      <TooltipTrigger onClick={(e) => e.stopPropagation()}>
-                        <CalendarIcon className='h-3 w-3 text-muted-foreground' />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>已排程於 {scheduledDate}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                  <Badge variant={(sub.eisenhower?.toLowerCase() || 'q4') as any} className="text-[8px] px-1 py-0 h-4">
-                    {sub.eisenhower || 'Q4'}
-                  </Badge>
+    <div className="space-y-2 border rounded-md p-2 bg-secondary/10">
+      <DraggableItem 
+        id={task.id} 
+        data={{ type: 'BACKLOG_ITEM', refId: task.id, refType: 'TASK' }}
+        isDesktop={isDesktop}
+        onItemTap={() => onItemTap(task.id, 'TASK')}
+      >
+        <div className="flex justify-between items-center px-1 mb-1">
+          <p className={`text-[10px] font-bold text-muted-foreground/70 uppercase truncate flex-1 ${isDesktop ? 'cursor-grab active:cursor-grabbing' : ''}`}>
+            {task.title}
+          </p>
+          <div className="flex items-center gap-2 ml-2">
+            {scheduledDate && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger onClick={(e) => e.stopPropagation()}>
+                    <CalendarIcon className='h-3 w-3 text-muted-foreground' />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>已排程於 {scheduledDate}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            <Badge variant={(task.eisenhower?.toLowerCase() || 'q4') as any} className="text-[8px] px-1 py-0 h-4 scale-90">
+              {task.eisenhower || 'Q4'}
+            </Badge>
+          </div>
+        </div>
+      </DraggableItem>
+
+      {subtasks.length > 0 && (
+        <div className="space-y-2 ml-2 border-l-2 pl-2">
+          {subtasks.map(sub => {
+            const subScheduledDate = scheduledMap.get(sub.id);
+            return (
+              <DraggableItem 
+                key={sub.id} 
+                id={sub.id} 
+                data={{ type: 'BACKLOG_ITEM', refId: sub.id, refType: 'SUBTASK' }}
+                isDesktop={isDesktop}
+                onItemTap={() => onItemTap(sub.id, 'SUBTASK')}
+              >
+                <div className={`p-2 bg-card border rounded shadow-sm text-sm flex justify-between items-center group ${isDesktop ? 'cursor-grab active:cursor-grabbing' : ''}`}>
+                  <span className='flex-1 truncate'>{sub.title}</span>
+                  <div className='flex items-center gap-2'>
+                    {subScheduledDate && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger onClick={(e) => e.stopPropagation()}>
+                            <CalendarIcon className='h-3 w-3 text-muted-foreground' />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>已排程於 {subScheduledDate}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                    <Badge variant={(sub.eisenhower?.toLowerCase() || 'q4') as any} className="text-[8px] px-1 py-0 h-4">
+                      {sub.eisenhower || 'Q4'}
+                    </Badge>
+                  </div>
                 </div>
-              </div>
-            </DraggableItem>
-          );
-        })}
-      </div>
-    </TooltipProvider>
+              </DraggableItem>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 };
 

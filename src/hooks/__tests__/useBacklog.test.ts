@@ -31,6 +31,50 @@ describe('useBacklog', () => {
     expect(result.current.groups[1].tasks).toHaveLength(1);
   });
 
+  it('should include standalone tasks (tasks without subtasks)', async () => {
+    const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '' };
+    await db.categories.add(cat1);
+
+    const task1 = { id: 't1', categoryId: 'cat1', title: 'Task 1', description: '', status: 'TODO' as const, eisenhower: 'Q1' as const, updatedAt: '' };
+    await db.tasks.add(task1);
+
+    const { result } = renderHook(() => useBacklog('2026-02-03'));
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.groups).toHaveLength(1);
+    expect(result.current.groups[0].tasks).toHaveLength(1);
+    expect(result.current.groups[0].tasks[0].id).toBe('t1');
+  });
+
+  it('should exclude archived categories and their tasks', async () => {
+    const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: true, createdAt: '', updatedAt: '' };
+    await db.categories.add(cat1);
+
+    const task1 = { id: 't1', categoryId: 'cat1', title: 'Task 1', description: '', status: 'TODO' as const, eisenhower: 'Q1' as const, updatedAt: '' };
+    await db.tasks.add(task1);
+
+    const { result } = renderHook(() => useBacklog('2026-02-03'));
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.groups).toHaveLength(0);
+  });
+
+  it('should exclude archived tasks', async () => {
+    const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '' };
+    await db.categories.add(cat1);
+
+    const task1 = { id: 't1', categoryId: 'cat1', title: 'Task 1', description: '', status: 'ARCHIVED' as const, eisenhower: 'Q1' as const, updatedAt: '' };
+    await db.tasks.add(task1);
+
+    const { result } = renderHook(() => useBacklog('2026-02-03'));
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.groups).toHaveLength(0);
+  });
+
   it('should filter out scheduled tasks', async () => {
     const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '' };
     await db.categories.add(cat1);

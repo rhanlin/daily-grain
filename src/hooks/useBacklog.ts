@@ -1,10 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, type Category, type Task } from '@/lib/db';
+import { db, type Category, type Task, type SubTask } from '@/lib/db';
 
 export interface BacklogGroup {
   category: Category;
   tasks: Task[];
-  subtasks: any[]; // We'll handle subtasks if needed later, focusing on Task grouping for now
+  subtasks: SubTask[];
 }
 
 export const useBacklog = (date: string) => {
@@ -20,31 +20,36 @@ export const useBacklog = (date: string) => {
     const allTasks = await db.tasks.toArray();
     const allSubTasks = await db.subtasks.toArray();
       
+    // Filter tasks not in the plan, not archived, and status is TODO
+    const backlogTasks = allTasks.filter(t => 
+      t.status === 'TODO' && 
+      !planRefIds.has(t.id)
+    );
+
     // Filter subtasks not in the plan and not completed
-    const backlogSubTasks = allSubTasks.filter(s => !s.isCompleted && !planRefIds.has(s.id));
+    const backlogSubTasks = allSubTasks.filter(s => 
+      !s.isCompleted && 
+      !planRefIds.has(s.id)
+    );
 
     // 4. Group by category
     const groups: BacklogGroup[] = categories.map(cat => {
-      // Find all tasks in this category
-      const catTasks = allTasks.filter(t => t.categoryId === cat.id);
+      // Find tasks in this category that are in the backlog
+      const catTasks = backlogTasks.filter(t => t.categoryId === cat.id);
       
-      // Filter subtasks that belong to these tasks AND are not in plan AND not completed
+      // Find subtasks that belong to ANY task in this category (even if the task itself is archived or scheduled)
+      // BUT they must be in the backlogSubTasks list (unscheduled, incomplete)
       const catSubTasks = backlogSubTasks.filter(s => {
-        const parentTask = catTasks.find(t => t.id === s.taskId);
-        return !!parentTask;
-      });
-
-      // Filter parent tasks that have at least one visible subtask
-      const tasksWithSubtasks = catTasks.filter(t => {
-        return catSubTasks.some(s => s.taskId === t.id);
+        const parentTask = allTasks.find(t => t.id === s.taskId);
+        return parentTask?.categoryId === cat.id;
       });
 
       return {
         category: cat,
-        tasks: tasksWithSubtasks,
+        tasks: catTasks,
         subtasks: catSubTasks
       };
-    }).filter(group => group.subtasks.length > 0);
+    }).filter(group => group.tasks.length > 0 || group.subtasks.length > 0);
 
     return groups;
   }, [date]);

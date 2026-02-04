@@ -34,16 +34,10 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
   if (groups.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center p-4">
-        <p className="text-sm text-muted-foreground italic">無任務任務</p>
+        <p className="text-sm text-muted-foreground italic">無任務項目</p>
       </div>
     );
   }
-
-  const planRefIds = new Set(
-    Array.from(scheduledMap.entries())
-      .filter(([_, date]) => date === selectedDate)
-      .map(([id, _]) => id)
-  );
 
   if (isDesktop) {
     return (
@@ -59,7 +53,6 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
                 category={group.category}
                 tasks={group.tasks}
                 subtasks={group.subtasks}
-                planRefIds={planRefIds}
                 scheduledMap={scheduledMap}
                 isDesktop={isDesktop}
                 onItemTap={onItemTap}
@@ -105,7 +98,6 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
                   category={group.category}
                   tasks={group.tasks}
                   subtasks={group.subtasks}
-                  planRefIds={planRefIds}
                   scheduledMap={scheduledMap}
                   isDesktop={isDesktop}
                   onItemTap={onItemTap}
