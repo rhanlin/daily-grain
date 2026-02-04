@@ -16,7 +16,7 @@ The goal is to add a Floating Action Button (FAB) to the Category Detail Page on
 ### 2. FAB Implementation
 - **Decision**: Add a fixed-position `Button` component in `CategoryDetailPage.tsx`, visible only on mobile (using CSS or `react-use` media query).
 - **Rationale**: Matches the implementation in `HomePage.tsx`.
-- **Styling**: `fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-2xl z-50`. This matches the Home Page FAB style.
+- **Styling**: `fixed bottom-24 right-6 h-12 w-12 rounded-full shadow-2xl z-50`. This matches the Home Page FAB style.
 
 ### 3. Responsive Behavior
 - **Decision**: Use `react-use`'s `useMedia` hook to conditionally render the FAB only on mobile devices (`max-width: 768px`).

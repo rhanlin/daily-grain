@@ -57,6 +57,7 @@ export const repository = {
         description,
         status: 'TODO',
         eisenhower: 'Q4',
+        createdAt: now,
         updatedAt: now
       };
       await db.tasks.add(task);
@@ -96,6 +97,7 @@ export const repository = {
         title,
         isCompleted: false,
         eisenhower: 'Q4',
+        createdAt: now,
         updatedAt: now
       };
       await db.subtasks.add(subtask);

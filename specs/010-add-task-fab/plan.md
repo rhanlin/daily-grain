@@ -1,61 +1,104 @@
-# Implementation Plan: Add Task FAB on Mobile
+# Implementation Plan: [FEATURE]
 
-**Branch**: `010-add-task-fab` | **Date**: 2026-02-04 | **Spec**: [specs/010-add-task-fab/spec.md](specs/010-add-task-fab/spec.md)
-**Input**: Feature specification from `/specs/010-add-task-fab/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+
+**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-This feature implements a Floating Action Button (FAB) on the Category Detail Page for mobile devices. The FAB allows users to quickly create a new task within the current category, mirroring the "Add Category" experience on the Home Page.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x, Node.js v24.13.0+
-**Primary Dependencies**: React 18+, TailwindCSS 4, Shadcn UI (Drawer, Button), Lucide React, react-use (for useMedia)
-**Storage**: IndexedDB (via Dexie.js) - existing schema sufficient
-**Testing**: Manual verification on mobile viewport
-**Target Platform**: Mobile Web (PWA)
-**Project Type**: Web Application
-**Performance Goals**: Instant drawer opening (<100ms)
-**Constraints**: Consistency with existing FAB styling.
+<!--
+  ACTION REQUIRED: Replace the content in this section with the technical details
+  for the project. The structure here is presented in advisory capacity to guide
+  the iteration process.
+-->
+
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: IndexedDB (via Dexie.js) - Schema v2 added `createdAt` field to Tasks/Subtasks.  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [single/web/mobile - determines source structure]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 
-*GATE: Passed. Re-check after Phase 1 design.*
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- **High Quality & Testability**: Reusing tested components (`QuickCreateTaskDrawer`).
-- **Consistent UX**: Matches Home Page FAB pattern.
-- **Performance Centric**: Minimal new code, reusing logic.
-- **MVP**: Direct implementation of the requirement.
-- **Traditional Chinese Only**: UI text is in TC.
+[Gates determined based on constitution file]
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/010-add-task-fab/
-├── plan.md              # This file
-├── research.md          # Technical Decisions
-├── data-model.md        # Entity Interactions
-├── quickstart.md        # Verification Steps
-├── contracts/           # UI Actions
-│   └── ui-actions.md
-└── tasks.md             # To be generated
+specs/[###-feature]/
+├── plan.md              # This file (/speckit.plan command output)
+├── research.md          # Phase 0 output (/speckit.plan command)
+├── data-model.md        # Phase 1 output (/speckit.plan command)
+├── quickstart.md        # Phase 1 output (/speckit.plan command)
+├── contracts/           # Phase 1 output (/speckit.plan command)
+└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
 ```
 
 ### Source Code (repository root)
+<!--
+  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
+  for this feature. Delete unused options and expand the chosen structure with
+  real paths (e.g., apps/admin, packages/something). The delivered plan must
+  not include Option labels.
+-->
 
 ```text
+# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
-├── pages/
-│   └── CategoryDetailPage.tsx  # Add FAB and Drawer logic here
-└── features/
-    └── tasks/
-        └── QuickCreateTaskDrawer.tsx # Reuse this component
+├── models/
+├── services/
+├── cli/
+└── lib/
+
+tests/
+├── contract/
+├── integration/
+└── unit/
+
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+backend/
+├── src/
+│   ├── models/
+│   ├── services/
+│   └── api/
+└── tests/
+
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+└── tests/
+
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
+
+ios/ or android/
+└── [platform-specific structure: feature modules, UI flows, platform tests]
 ```
 
-**Structure Decision**: Modify existing page component.
+**Structure Decision**: [Document the selected structure and reference the real
+directories captured above]
 
 ## Complexity Tracking
 
-No violations.
+> **Fill ONLY if Constitution Check has violations that must be justified**
+
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |

@@ -9,7 +9,7 @@ interface CategoryTaskDetailProps {
 
 export const CategoryTaskDetail: React.FC<CategoryTaskDetailProps> = ({ categoryId }) => {
   const tasks = useLiveQuery(
-    () => db.tasks.where('categoryId').equals(categoryId).reverse().sortBy('updatedAt'),
+    () => db.tasks.where('categoryId').equals(categoryId).reverse().sortBy('createdAt'),
     [categoryId]
   );
 

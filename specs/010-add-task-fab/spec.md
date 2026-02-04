@@ -20,11 +20,17 @@
 1. **Given** 使用者在手機版瀏覽器進入分類詳情頁 (Category Detail Page), **When** 頁面載入完成, **Then** 右下角應顯示一個「新增」懸浮按鈕 (FAB)。
 2. **Given** 使用者看見 FAB 按鈕, **When** 點擊該按鈕, **Then** 應彈出「新增任務」的介面 (Drawer 或 Dialog)，且樣式與首頁新增分類一致。
 3. **Given** 「新增任務」介面已開啟, **When** 輸入任務資訊並確認, **Then** 新任務應被建立並顯示在當前列表，且介面自動關閉。
-4. **Given** 使用者在桌面版瀏覽器 (寬度大於 mobile breakpoint), **When** 進入分類詳情頁, **Then** 該 FAB 按鈕 **不應** 顯示 (除非設計統一要求，但依據需求描述強調「手機版」，此為合理推斷 [NEEDS CLARIFICATION: Desktop behavior])。
+4. **Given** 使用者在桌面版瀏覽器 (寬度大於 mobile breakpoint), **When** 進入分類詳情頁, **Then** 該 FAB 按鈕應被 **隱藏** (Hide)。
+5. **Given** 分類詳情頁有多個任務, **When** 點擊任一任務的象限標籤切換象限, **Then** 列表中的任務排序應 **保持不變** (Stable Sorting)。
 
 ---
 
 ## Requirements *(mandatory)*
+
+### Clarifications
+#### Session 2026-02-04
+- Q: Task reorders when quadrant label is clicked. Fix by sorting by Created Time? → A: Include & Fix: Switch sort order to `createdAt` (Created Time) in Category Detail.
+- Q: Should FAB appear on Desktop? → A: Mobile Only: Hide FAB when width > 768px.
 
 ### Functional Requirements
 
@@ -32,11 +38,12 @@
 - **FR-002**: **樣式一致性**: FAB 的圖示 (Icon)、顏色、大小與陰影效果，必須與首頁 (Home Page) 的「新增分類」按鈕完全一致。
 - **FR-003**: **互動流程**: 點擊 FAB 後，必須觸發與現有「新增任務」相同的 UI 流程 (例如打開 Drawer 進行輸入)。
 - **FR-004**: **預設分類**: 透過此 FAB 新增任務時，系統應自動將當前所在的分類設為新任務的預設分類。
-- **FR-005**: **響應式顯示**: 該 FAB 按鈕主要針對手機版介面設計，在桌面版寬度下應隱藏或調整顯示位置 (待確認)。
+- **FR-005**: **響應式顯示**: 該 FAB 按鈕僅在手機版 (寬度 <= 768px) 顯示，桌面版應隱藏。
+- **FR-006**: **穩定排序修正**: 分類詳情頁面的任務列表排序必須由 `updatedAt` 改為 `createdAt` (需新增此欄位)，確保在更新象限標籤或其他屬性時，列表順序不會發生跳動。
 
 ### Key Entities
 
-- **Task**: 任務實體，包含標題、所屬分類 ID 等屬性。
+- **Task**: 任務實體，需新增 `createdAt` 屬性。
 - **Category**: 分類實體，當前頁面的上下文環境。
 
 ## Success Criteria *(mandatory)*

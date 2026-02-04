@@ -16,6 +16,7 @@ export interface Task {
   description: string;
   status: 'TODO' | 'DONE' | 'ARCHIVED';
   eisenhower: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+  createdAt: string;
   updatedAt: string;
   completedAt?: string;
 }
@@ -26,6 +27,7 @@ export interface SubTask {
   title: string;
   isCompleted: boolean;
   eisenhower: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+  createdAt: string;
   updatedAt: string;
 }
 
@@ -52,6 +54,24 @@ export class MyDatabase extends Dexie {
       tasks: 'id, categoryId, status, eisenhower, updatedAt',
       subtasks: 'id, taskId, updatedAt',
       dailyPlanItems: 'id, date, refId, updatedAt'
+    });
+
+    this.version(2).stores({
+      tasks: 'id, categoryId, status, eisenhower, updatedAt, createdAt',
+      subtasks: 'id, taskId, updatedAt, createdAt'
+    }).upgrade(async tx => {
+      // Populate createdAt for Tasks
+      await tx.table('tasks').toCollection().modify(task => {
+        if (!task.createdAt) {
+          task.createdAt = task.updatedAt || new Date().toISOString();
+        }
+      });
+      // Populate createdAt for SubTasks
+      await tx.table('subtasks').toCollection().modify(subtask => {
+        if (!subtask.createdAt) {
+          subtask.createdAt = subtask.updatedAt || new Date().toISOString();
+        }
+      });
     });
   }
 }
