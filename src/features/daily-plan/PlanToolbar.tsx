@@ -4,6 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { DailyPlanDateSelector } from './DailyPlanDateSelector';
+import { formatLocalDate } from '@/lib/utils';
 
 interface PlanToolbarProps {
   selectedDate: string;
@@ -21,7 +22,7 @@ export const PlanToolbar: React.FC<PlanToolbarProps> = ({
   const shiftDate = (days: number) => {
     const d = new Date(selectedDate);
     d.setDate(d.getDate() + days);
-    onDateChange(d.toISOString().split('T')[0]);
+    onDateChange(formatLocalDate(d));
   };
 
   return (

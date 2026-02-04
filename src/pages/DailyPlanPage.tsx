@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { Drawer, DrawerTrigger, DrawerContent } from '@/components/ui/drawer';
 import { useMedia } from 'react-use';
 import { toast } from "sonner"
+import { getLocalToday } from '@/lib/utils';
 
 interface ConflictState {
   active: Active;
@@ -34,7 +35,7 @@ interface ConflictState {
 }
 
 export const DailyPlanPage: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(getLocalToday());
   const { planItems, addToPlan, reorderItems, moveItem } = useDailyPlan(selectedDate);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [conflict, setConflict] = useState<ConflictState | null>(null);

@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { repository } from '@/lib/repository';
 import { rolloverUnfinishedItems } from '@/lib/rollover';
+import { getLocalToday } from '@/lib/utils';
 
 export const useDailyPlan = (date: string) => {
   const planItems = useLiveQuery(
@@ -51,7 +52,7 @@ export const useDailyPlan = (date: string) => {
   };
 
   const triggerRollover = async () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalToday();
     if (date === today) {
       await rolloverUnfinishedItems(date);
     }

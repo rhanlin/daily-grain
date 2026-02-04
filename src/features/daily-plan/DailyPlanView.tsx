@@ -19,6 +19,7 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { useLongPress, useMedia } from 'react-use';
+import { getLocalToday } from '@/lib/utils';
 
 interface DailyPlanViewProps {
   selectedDate: string;
@@ -37,7 +38,7 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
   });
 
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalToday();
     if (selectedDate === today) {
       triggerRollover();
     }
