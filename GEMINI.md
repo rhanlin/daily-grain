@@ -15,6 +15,7 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js, dexie-react-hooks, @dnd-kit/core (008-refine-backlog-filtering)
 - TypeScript 5.x, Node.js v24.13.0+ + React 18+, Vite, vite-plugin-pwa (009-pwa-custom-logo)
 - N/A (Static Assets) (009-pwa-custom-logo)
+- TypeScript 5.x, Node.js v24.13.0+ + React 18+, TailwindCSS 4, Shadcn UI (Drawer, Button), Lucide React, react-use (for useMedia) (010-add-task-fab)
 
 - TypeScript 5.x, Node.js 20+ (for tooling) + React 18+, Vite, TailwindCSS 4, Shadcn UI, Vites (001-time-allocation-app)
 
@@ -34,8 +35,8 @@ npm test && npm run lint
 TypeScript 5.x, Node.js 20+ (for tooling): Follow standard conventions
 
 ## Recent Changes
-- 009-pwa-custom-logo: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Vite, vite-plugin-pwa
-- 009-pwa-custom-logo: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+- 010-add-task-fab: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, TailwindCSS 4, Shadcn UI (Drawer, Button), Lucide React, react-use (for useMedia)
+- 010-add-task-fab: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 009-pwa-custom-logo: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Vite, vite-plugin-pwa
 
 
