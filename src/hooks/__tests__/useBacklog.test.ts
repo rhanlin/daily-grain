@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { useBacklog } from '../useBacklog';
 import { db } from '@/lib/db';
 
-describe('useBacklog', () => {
+describe('useBacklog - 過濾優化驗證', () => {
   beforeEach(async () => {
     await db.categories.clear();
     await db.tasks.clear();
@@ -11,91 +11,63 @@ describe('useBacklog', () => {
     await db.subtasks.clear();
   });
 
-  it('should group unscheduled tasks by category', async () => {
-    const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '' };
-    const cat2 = { id: 'cat2', name: 'Cat 2', color: '#000', isArchived: false, createdAt: '', updatedAt: '' };
-    await db.categories.bulkAdd([cat1, cat2]);
-
-    const task1 = { id: 't1', categoryId: 'cat1', title: 'Task 1', description: '', status: 'TODO' as const, eisenhower: 'Q1' as const, updatedAt: '' };
-    const task2 = { id: 't2', categoryId: 'cat2', title: 'Task 2', description: '', status: 'TODO' as const, eisenhower: 'Q2' as const, updatedAt: '' };
-    await db.tasks.bulkAdd([task1, task2]);
-
-    const { result } = renderHook(() => useBacklog('2026-02-03'));
-
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    expect(result.current.groups).toHaveLength(2);
-    expect(result.current.groups[0].category.name).toBe('Cat 1');
-    expect(result.current.groups[0].tasks).toHaveLength(1);
-    expect(result.current.groups[1].category.name).toBe('Cat 2');
-    expect(result.current.groups[1].tasks).toHaveLength(1);
-  });
-
-  it('should include standalone tasks (tasks without subtasks)', async () => {
+  it('應隱藏無子任務的 Task (FR-003)', async () => {
     const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '' };
     await db.categories.add(cat1);
 
-    const task1 = { id: 't1', categoryId: 'cat1', title: 'Task 1', description: '', status: 'TODO' as const, eisenhower: 'Q1' as const, updatedAt: '' };
-    await db.tasks.add(task1);
+    // 建立一個沒有子任務的 Task
+    await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Empty Task', status: 'TODO', description: '', eisenhower: 'Q1', updatedAt: '' });
 
     const { result } = renderHook(() => useBacklog('2026-02-03'));
-
     await waitFor(() => expect(result.current.loading).toBe(false));
 
+    // 因為沒有子任務，應被隱藏
+    expect(result.current.groups).toHaveLength(0);
+  });
+
+  it('應在所有子任務都排程後隱藏 Task (FR-003)', async () => {
+    const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '' };
+    await db.categories.add(cat1);
+
+    await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Task with Subs', status: 'TODO', description: '', eisenhower: 'Q1', updatedAt: '' });
+    await db.subtasks.bulkAdd([
+      { id: 's1', taskId: 't1', title: 'Sub 1', isCompleted: false, eisenhower: 'Q1', updatedAt: '' },
+      { id: 's2', taskId: 't1', title: 'Sub 2', isCompleted: false, eisenhower: 'Q1', updatedAt: '' }
+    ]);
+
+    // 初始狀態應顯示
+    const { result } = renderHook(({ date }) => useBacklog(date), {
+      initialProps: { date: '2026-02-03' }
+    });
+    await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.groups).toHaveLength(1);
     expect(result.current.groups[0].tasks).toHaveLength(1);
-    expect(result.current.groups[0].tasks[0].id).toBe('t1');
+
+    // 將 s1 加入計畫
+    await db.dailyPlanItems.add({ id: 'p1', date: '2026-02-03', refId: 's1', refType: 'SUBTASK', orderIndex: 1, isRollover: false, updatedAt: '' });
+    await waitFor(() => expect(result.current.groups[0].subtasks).toHaveLength(1)); // 剩餘 s2
+
+    // 將 s2 加入計畫
+    await db.dailyPlanItems.add({ id: 'p2', date: '2026-02-03', refId: 's2', refType: 'SUBTASK', orderIndex: 2, isRollover: false, updatedAt: '' });
+    
+    // 現在 Task 應隱藏
+    await waitFor(() => expect(result.current.groups).toHaveLength(0));
   });
 
-  it('should exclude archived categories and their tasks', async () => {
-    const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: true, createdAt: '', updatedAt: '' };
-    await db.categories.add(cat1);
-
-    const task1 = { id: 't1', categoryId: 'cat1', title: 'Task 1', description: '', status: 'TODO' as const, eisenhower: 'Q1' as const, updatedAt: '' };
-    await db.tasks.add(task1);
-
-    const { result } = renderHook(() => useBacklog('2026-02-03'));
-
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    expect(result.current.groups).toHaveLength(0);
-  });
-
-  it('should exclude archived tasks', async () => {
+  it('應支援全域排程過濾 (Research Decision)', async () => {
     const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '' };
     await db.categories.add(cat1);
 
-    const task1 = { id: 't1', categoryId: 'cat1', title: 'Task 1', description: '', status: 'ARCHIVED' as const, eisenhower: 'Q1' as const, updatedAt: '' };
-    await db.tasks.add(task1);
+    await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Task with Subs', status: 'TODO', description: '', eisenhower: 'Q1', updatedAt: '' });
+    await db.subtasks.add({ id: 's1', taskId: 't1', title: 'Sub 1', isCompleted: false, eisenhower: 'Q1', updatedAt: '' });
 
-    const { result } = renderHook(() => useBacklog('2026-02-03'));
+    // s1 被排程在「明天」
+    await db.dailyPlanItems.add({ id: 'p1', date: '2026-02-04', refId: 's1', refType: 'SUBTASK', orderIndex: 1, isRollover: false, updatedAt: '' });
 
+    const { result } = renderHook(() => useBacklog('2026-02-03')); // 檢視今天
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    expect(result.current.groups).toHaveLength(0);
-  });
-
-  it('should filter out scheduled tasks', async () => {
-    const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '' };
-    await db.categories.add(cat1);
-
-    const task1 = { id: 't1', categoryId: 'cat1', title: 'Task 1', description: '', status: 'TODO' as const, eisenhower: 'Q1' as const, updatedAt: '' };
-    await db.tasks.add(task1);
-
-    await db.dailyPlanItems.add({
-      id: 'p1',
-      date: '2026-02-03',
-      refId: 't1',
-      refType: 'TASK',
-      orderIndex: 1,
-      isRollover: false,
-      updatedAt: ''
-    });
-
-    const { result } = renderHook(() => useBacklog('2026-02-03'));
-
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
+    // s1 已被全球性排程，所以今天不應出現在 Backlog
     expect(result.current.groups).toHaveLength(0);
   });
 });

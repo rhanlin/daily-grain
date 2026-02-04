@@ -12,6 +12,7 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js, dexie-react-hooks (006-sync-backlog-data)
 - TypeScript 5.x, Node.js v24.13.0+ + React 18+, TailwindCSS 4, Lucide React, Radix UI (Scroll Area) (007-matrix-ui-refactor)
 - IndexedDB (via Dexie.js) - existing schema remains unchanged. (007-matrix-ui-refactor)
+- TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js, dexie-react-hooks, @dnd-kit/core (008-refine-backlog-filtering)
 
 - TypeScript 5.x, Node.js 20+ (for tooling) + React 18+, Vite, TailwindCSS 4, Shadcn UI, Vites (001-time-allocation-app)
 
@@ -31,9 +32,9 @@ npm test && npm run lint
 TypeScript 5.x, Node.js 20+ (for tooling): Follow standard conventions
 
 ## Recent Changes
+- 008-refine-backlog-filtering: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js, dexie-react-hooks, @dnd-kit/core
 - 007-matrix-ui-refactor: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, TailwindCSS 4, Lucide React, Radix UI (Scroll Area)
 - 006-sync-backlog-data: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js, dexie-react-hooks
-- 005-category-management-refactor: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, TailwindCSS 4, Shadcn UI (Drawer, Button, Dialog), Lucide React, react-use (for `useLongPress`)
 
 
 ## ReactJS Principles

@@ -12,44 +12,42 @@ export const useBacklog = (date: string) => {
     // 1. Fetch all active categories
     const categories = await db.categories.filter(c => !c.isArchived).toArray();
     
-    // 2. Fetch all daily plan items for the date to filter them out
-    const planItems = await db.dailyPlanItems.where('date').equals(date).toArray();
-    const planRefIds = new Set(planItems.map(item => item.refId));
+    // 2. Fetch ALL daily plan items (all dates) to filter them out globally
+    const allPlanItems = await db.dailyPlanItems.toArray();
+    const globalPlanRefIds = new Set(allPlanItems.map(item => item.refId));
     
     // 3. Fetch all tasks and subtasks
     const allTasks = await db.tasks.toArray();
     const allSubTasks = await db.subtasks.toArray();
       
-    // Filter tasks not in the plan, not archived, and status is TODO
-    const backlogTasks = allTasks.filter(t => 
-      t.status === 'TODO' && 
-      !planRefIds.has(t.id)
-    );
-
-    // Filter subtasks not in the plan and not completed
+    // Filter subtasks not in ANY plan and not completed
     const backlogSubTasks = allSubTasks.filter(s => 
       !s.isCompleted && 
-      !planRefIds.has(s.id)
+      !globalPlanRefIds.has(s.id)
     );
 
     // 4. Group by category
     const groups: BacklogGroup[] = categories.map(cat => {
-      // Find tasks in this category that are in the backlog
-      const catTasks = backlogTasks.filter(t => t.categoryId === cat.id);
+      // Find all tasks in this category that are TODO (not archived/done)
+      const catTasks = allTasks.filter(t => t.categoryId === cat.id && t.status === 'TODO');
       
-      // Find subtasks that belong to ANY task in this category (even if the task itself is archived or scheduled)
-      // BUT they must be in the backlogSubTasks list (unscheduled, incomplete)
+      // Find subtasks belonging to this category's tasks that are in the backlog
       const catSubTasks = backlogSubTasks.filter(s => {
         const parentTask = allTasks.find(t => t.id === s.taskId);
         return parentTask?.categoryId === cat.id;
       });
 
+      // FR-003 & FR-004: Only include parent Tasks that have at least one visible subtask
+      const tasksWithSubtasks = catTasks.filter(t => 
+        catSubTasks.some(s => s.taskId === t.id)
+      );
+
       return {
         category: cat,
-        tasks: catTasks,
+        tasks: tasksWithSubtasks,
         subtasks: catSubTasks
       };
-    }).filter(group => group.tasks.length > 0 || group.subtasks.length > 0);
+    }).filter(group => group.tasks.length > 0);
 
     return groups;
   }, [date]);

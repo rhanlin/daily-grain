@@ -95,14 +95,15 @@ const BacklogTaskItem = ({ task, subtasks, scheduledMap, isDesktop, onItemTap }:
 
   return (
     <div className="space-y-2 border rounded-md p-2 bg-secondary/10">
+      {/* FR-001: Task header is now non-interactive (disabled: true) */}
       <DraggableItem 
         id={task.id} 
         data={{ type: 'BACKLOG_ITEM', refId: task.id, refType: 'TASK' }}
         isDesktop={isDesktop}
-        onItemTap={() => onItemTap(task.id, 'TASK')}
+        onItemTap={() => {}} // FR-007: Disable click-to-add for Task headers
       >
         <div className="flex justify-between items-center px-1 mb-1">
-          <p className={`text-[10px] font-bold text-muted-foreground/70 uppercase truncate flex-1 ${isDesktop ? 'cursor-grab active:cursor-grabbing' : ''}`}>
+          <p className="text-[10px] font-bold text-muted-foreground/70 uppercase truncate flex-1">
             {task.title}
           </p>
           <div className="flex items-center gap-2 ml-2">
@@ -167,17 +168,21 @@ const BacklogTaskItem = ({ task, subtasks, scheduledMap, isDesktop, onItemTap }:
 };
 
 const DraggableItem = ({ id, data, children, isDesktop, onItemTap }: { id: string, data: any, children: React.ReactNode, isDesktop: boolean, onItemTap: () => void }) => {
+  // T006: Set disabled: true when refType is 'TASK'
+  const isDisabled = data.refType === 'TASK';
+
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id,
     data,
-    disabled: !isDesktop,
+    disabled: !isDesktop || isDisabled,
   });
   
-  const style = transform && isDesktop ? {
+  const style = transform && isDesktop && !isDisabled ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   } : undefined;
 
-  const eventHandlers = isDesktop ? listeners : { onClick: onItemTap };
+  // FR-007: onItemTap will be empty for TASK headers, preventing any action
+  const eventHandlers = (isDesktop && !isDisabled) ? listeners : { onClick: onItemTap };
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...eventHandlers} className={isDragging ? 'opacity-50' : ''}>
