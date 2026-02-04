@@ -3,14 +3,13 @@ import { useCategorySummary, type CategorySummary } from '@/hooks/useCategorySum
 import { CategoryCard } from './CategoryCard';
 import { useNavigate } from 'react-router-dom';
 import { FolderPlus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { CategoryActionDrawer } from './CategoryActionDrawer';
 import { EditCategoryDialog } from './EditCategoryDialog';
 import { QuickCreateTaskDrawer } from '@/features/tasks/QuickCreateTaskDrawer';
 import { repository } from '@/lib/repository';
 import { toast } from 'sonner';
 
-export const CategoryOverview: React.FC = () => {
+export const CategoryOverview: React.FC<{ onOpenCreateCategory: () => void }> = ({ onOpenCreateCategory }) => {
   const summaries = useCategorySummary();
   const navigate = useNavigate();
 
@@ -39,13 +38,15 @@ export const CategoryOverview: React.FC = () => {
 
   if (summaries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 text-center space-y-4 border-2 border-dashed rounded-lg">
+      <div 
+        className="flex flex-col items-center justify-center p-12 text-center space-y-4 border-2 border-dashed rounded-lg"
+        onClick={onOpenCreateCategory}
+      >
         <FolderPlus className="h-12 w-12 text-muted-foreground" />
         <div className="space-y-2">
           <h3 className="text-xl font-bold">尚無分類</h3>
-          <p className="text-muted-foreground">建立一個分類來開始組織您的任務。</p>
+          <p className="text-muted-foreground">點擊建立一個分類來開始組織任務。</p>
         </div>
-        <Button onClick={() => navigate('/matrix')}>前往矩陣頁面建立</Button>
       </div>
     );
   }

@@ -15,7 +15,7 @@ export const HomePage: React.FC = () => {
       </header> */}
 
       <section>
-        <CategoryOverview />
+        <CategoryOverview onOpenCreateCategory={() => setIsCreateCatOpen(true)} />
       </section>
 
       {/* Floating Action Button */}
