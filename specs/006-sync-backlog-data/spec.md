@@ -37,6 +37,7 @@
 - **FR-002**: **分類層級同步**: Backlog 中的任務分組必須動態對應到最新的 `Category` 實體。
 - **FR-003**: **任務與子任務一致性**: 任何對 `Task` 或 `SubTask` 欄位的更新（如 `title`, `eisenhower`）必須在 Backlog 中即時反映。
 - **FR-004**: **排除已封存資料**: Backlog 必須確保僅顯示 `status !== 'ARCHIVED'` 且分類未被封存的資料。
+- **FR-005**: **輪播邊境黏滯效果 (Sticky Carousel Boundary)**: 系統必須在移動版輪播中實作物理邊界感。若使用者手勢滑入起始佔位符 (Index 0)，系統必須以彈簧動畫自動回撥至首筆有效內容 (Index 1)，並防止停留於空白區域。
 
 ### Key Entities
 
@@ -51,4 +52,4 @@
 
 - **SC-001**: 資料庫更新後，Backlog UI 的更新延遲應低於 100ms。
 - **SC-002**: 確保 100% 的 `Category`, `Task`, `SubTask` 更新都能在 Backlog 檢視中正確呈現（無遺漏更新）。
-- **SC-003**: 頁面切換 (Navigation) 過程中不應出現明顯的舊資料閃爍 (Stale data flash)。
+- **SC-003**: 頁面切換 (Navigation) 過程中不應出現明顯的舊資料閃爍 (Stale data flash)。- **SC-004**: 邊界回彈動畫應具備物理真實感，且在主流手機上運行不應導致影格掉幀 (維持 60fps)。

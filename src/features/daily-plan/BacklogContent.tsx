@@ -8,6 +8,8 @@ import {
   CarouselItem,
 } from '@/components/ui/carousel';
 
+import { motion } from 'framer-motion';
+
 interface BacklogContentProps {
   selectedDate: string;
   scheduledMap: Map<string, string>;
@@ -64,7 +66,7 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
     );
   }
 
-  // Mobile Carousel with Placeholder at index 0
+  // Mobile Carousel with Sticky Boundary logic
   return (
     <div className="flex-1 flex flex-col overflow-hidden h-full">
       <div className="p-4 border-b flex justify-between items-center bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
@@ -79,30 +81,54 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
         opts={{
           align: 'center',
           startIndex: activeIndex === 0 && groups.length > 0 ? 1 : activeIndex,
+          duration: 25, // 稍微調快動畫速度增加物理感
         }}
         setApi={(api) => {
           if (!api) return;
+          
           api.on('select', () => {
-            onActiveIndexChange(api.selectedScrollSnap());
+            const current = api.selectedScrollSnap();
+            // FR-005: 如果滑入索引 0 (Placeholder)，自動彈回索引 1
+            if (current === 0) {
+              // 使用彈簧感的回彈
+              setTimeout(() => api.scrollTo(1), 10);
+            } else {
+              onActiveIndexChange(current);
+            }
           });
+
+          // 初始化時確保不在 0
+          if (api.selectedScrollSnap() === 0 && groups.length > 0) {
+            api.scrollTo(1, true);
+          }
         }}
       >
         <CarouselContent className="h-full">
-          {/* FR-034: Placeholder Slide */}
-          <CarouselItem className="h-full basis-4/5 pointer-events-none opacity-0" aria-hidden="true" />
+          {/* FR-034: Placeholder Slide - 採完全隔離設計 */}
+          <CarouselItem className="h-full basis-4/5 pointer-events-none opacity-0 select-none" aria-hidden="true" />
           
-          {groups.map((group) => (
+          {groups.map((group, idx) => (
             <CarouselItem key={group.category.id} className="h-full p-4 basis-4/5">
-              <ScrollArea className="h-[calc(75vh-120px)]">
-                <CategorySlide
-                  category={group.category}
-                  tasks={group.tasks}
-                  subtasks={group.subtasks}
-                  scheduledMap={scheduledMap}
-                  isDesktop={isDesktop}
-                  onItemTap={onItemTap}
-                />
-              </ScrollArea>
+              <motion.div
+                initial={false}
+                animate={{
+                  scale: activeIndex === idx + 1 ? 1 : 0.95,
+                  opacity: activeIndex === idx + 1 ? 1 : 0.6
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="h-full"
+              >
+                <ScrollArea className="h-[calc(75vh-120px)]">
+                  <CategorySlide
+                    category={group.category}
+                    tasks={group.tasks}
+                    subtasks={group.subtasks}
+                    scheduledMap={scheduledMap}
+                    isDesktop={isDesktop}
+                    onItemTap={onItemTap}
+                  />
+                </ScrollArea>
+              </motion.div>
             </CarouselItem>
           ))}
         </CarouselContent>
