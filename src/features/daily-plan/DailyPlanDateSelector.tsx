@@ -67,7 +67,7 @@ export const DailyPlanDateSelector: React.FC<DailyPlanDateSelectorProps> = ({
   }
 
   return (
-    <Drawer open={isOpen} onOpenChange={setIsOpen}>
+    <Drawer direction="top" open={isOpen} onOpenChange={setIsOpen}>
       <DrawerTrigger asChild>
         {Trigger}
       </DrawerTrigger>
