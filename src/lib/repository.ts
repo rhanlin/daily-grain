@@ -91,12 +91,17 @@ export const repository = {
     },
     async create(taskId: string, title: string) {
       const now = new Date().toISOString();
+      
+      // Fetch parent task to inherit Eisenhower value
+      const parentTask = await db.tasks.get(taskId);
+      const inheritedEisenhower = parentTask?.eisenhower || 'Q4';
+
       const subtask: SubTask = {
         id: uuidv4(),
         taskId,
         title,
         isCompleted: false,
-        eisenhower: 'Q4',
+        eisenhower: inheritedEisenhower,
         createdAt: now,
         updatedAt: now
       };

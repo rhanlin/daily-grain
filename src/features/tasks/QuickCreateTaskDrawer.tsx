@@ -57,7 +57,7 @@ export const QuickCreateTaskDrawer: React.FC<QuickCreateTaskDrawerProps> = ({ ch
         title: title.trim(),
         description: '',
         status: 'TODO' as const,
-        eisenhower: 'Q2' as const,
+        eisenhower: 'Q4' as const,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };

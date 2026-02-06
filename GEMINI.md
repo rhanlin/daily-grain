@@ -20,6 +20,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - TypeScript 5.x, Node.js v24.13.0+ + React 18+, dnd-kit, Lucide React, TailwindCSS 4, Shadcn UI (011-daily-plan-drag-optimization)
 - TypeScript 5.x, Node.js v24.13.0+ + React 18+, react-use (for `useLongPress`), Lucide React, Shadcn UI (012-backlog-multi-select)
 - N/A (Transient UI State) - Updates `dailyPlanItems` table (012-backlog-multi-select)
+- TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB), Lucide React, Shadcn UI (013-update-eisenhower-defaults)
+- IndexedDB (Existing Task/SubTask tables) (013-update-eisenhower-defaults)
 
 - TypeScript 5.x, Node.js 20+ (for tooling) + React 18+, Vite, TailwindCSS 4, Shadcn UI, Vites (001-time-allocation-app)
 
@@ -39,8 +41,8 @@ npm test && npm run lint
 TypeScript 5.x, Node.js 20+ (for tooling): Follow standard conventions
 
 ## Recent Changes
-- 012-backlog-multi-select: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, react-use (for `useLongPress`), Lucide React, Shadcn UI
-- 012-backlog-multi-select: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+- 013-update-eisenhower-defaults: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB), Lucide React, Shadcn UI
+- 013-update-eisenhower-defaults: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 012-backlog-multi-select: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, react-use (for `useLongPress`), Lucide React, Shadcn UI
 
 

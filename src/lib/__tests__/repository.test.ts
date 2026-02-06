@@ -33,3 +33,46 @@ describe('repository.categories', () => {
     expect(archivedTask?.status).toBe('ARCHIVED');
   });
 });
+
+describe('repository.tasks', () => {
+  beforeEach(async () => {
+    await db.categories.clear();
+    await db.tasks.clear();
+    await db.subtasks.clear();
+  });
+
+  it('should create task with default Q4 quadrant', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Default Task');
+    
+    expect(task.eisenhower).toBe('Q4');
+    const saved = await db.tasks.get(task.id);
+    expect(saved?.eisenhower).toBe('Q4');
+  });
+});
+
+describe('repository.subtasks', () => {
+  beforeEach(async () => {
+    await db.categories.clear();
+    await db.tasks.clear();
+    await db.subtasks.clear();
+  });
+
+  it('should inherit quadrant from parent task', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    // Create task with Q2
+    const task = await repository.tasks.create(cat.id, 'Q2 Task');
+    await repository.tasks.update(task.id, { eisenhower: 'Q2' });
+    
+    const subtask = await repository.subtasks.create(task.id, 'Inherited Subtask');
+    expect(subtask.eisenhower).toBe('Q2');
+    
+    const saved = await db.subtasks.get(subtask.id);
+    expect(saved?.eisenhower).toBe('Q2');
+  });
+
+  it('should fallback to Q4 if parent task is missing', async () => {
+    const subtask = await repository.subtasks.create('non-existent-id', 'Fallback Subtask');
+    expect(subtask.eisenhower).toBe('Q4');
+  });
+});
