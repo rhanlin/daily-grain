@@ -194,7 +194,7 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            transition={{ type: "spring", duration: 0.1, stiffness: 800, damping: 40 }}
             className="space-y-2"
           >
             <SortableContext 
