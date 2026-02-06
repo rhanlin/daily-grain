@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useDailyPlan } from '@/hooks/useDailyPlan';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface BacklogContentProps {
   selectedDate: string;
@@ -21,6 +22,7 @@ interface BacklogContentProps {
   onItemTap: (refId: string, refType: 'TASK' | 'SUBTASK') => void;
   activeIndex: number;
   onActiveIndexChange: (index: number) => void;
+  onClose?: () => void;
 }
 
 export const BacklogContent: React.FC<BacklogContentProps> = ({
@@ -30,9 +32,11 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
   onItemTap,
   activeIndex,
   onActiveIndexChange,
+  onClose,
 }) => {
   const { groups, loading } = useBacklog(selectedDate);
   const { addToPlan } = useDailyPlan(selectedDate);
+  const navigate = useNavigate();
 
   // FR-002: Multi-select state (Category Scope)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -89,8 +93,17 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
 
   if (groups.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-center p-4">
+      <div className="flex flex-col items-center justify-center h-64 text-center p-4 space-y-4">
         <p className="text-sm text-muted-foreground italic">無任務項目</p>
+        <Button 
+          variant="outline" 
+          onClick={() => {
+            navigate('/management');
+            onClose?.();
+          }}
+        >
+          前往任務管理
+        </Button>
       </div>
     );
   }

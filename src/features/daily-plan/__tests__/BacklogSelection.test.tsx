@@ -1,6 +1,14 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { BacklogContent } from '../BacklogContent';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { BrowserRouter } from 'react-router-dom';
+
+// Mock Carousel
+vi.mock('@/components/ui/carousel', () => ({
+  Carousel: ({ children }: any) => <div>{children}</div>,
+  CarouselContent: ({ children }: any) => <div>{children}</div>,
+  CarouselItem: ({ children }: any) => <div>{children}</div>,
+}));
 
 // Mock dependencies
 vi.mock('@/hooks/useBacklog', () => ({
@@ -86,21 +94,24 @@ describe('BacklogContent Multi-select logic (Category Scope)', () => {
 
   it('should manage selection within a category and lock other categories', async () => {
     render(
-      <BacklogContent 
-        selectedDate="2026-02-04" 
-        scheduledMap={new Map()} 
-        isDesktop={false} 
-        onItemTap={() => {}} 
-        activeIndex={1} 
-        onActiveIndexChange={() => {}} 
-      />
+      <BrowserRouter>
+        <BacklogContent 
+          selectedDate="2026-02-04" 
+          scheduledMap={new Map()} 
+          isDesktop={false} 
+          onItemTap={() => {}} 
+          activeIndex={1} 
+          onActiveIndexChange={() => {}} 
+        />
+      </BrowserRouter>
     );
 
     // 1. Initial State
     expect(screen.queryByText(/加入今日計畫/)).not.toBeInTheDocument();
 
     // 2. Start selection in Cat 1
-    fireEvent.click(screen.getByText('Start sub1'));
+    const slide1 = screen.getByTestId('slide-cat1');
+    fireEvent.click(within(slide1).getByText('Start sub1'));
     expect(screen.getByText(/加入今日計畫 \(1\)/)).toBeInTheDocument();
     
     // Cat 2 should be locked (mocked UI shows 'Locked')
@@ -108,7 +119,7 @@ describe('BacklogContent Multi-select logic (Category Scope)', () => {
     expect(screen.getByText('Locked')).toBeInTheDocument();
 
     // 3. Toggle another item in same Cat 1
-    fireEvent.click(screen.getByText('Toggle sub2'));
+    fireEvent.click(within(slide1).getByText('Toggle sub2'));
     expect(screen.getByText(/加入今日計畫 \(2\)/)).toBeInTheDocument();
 
     // 4. Batch add
@@ -127,22 +138,27 @@ describe('BacklogContent Multi-select logic (Category Scope)', () => {
 
   it('should switch category if starting selection in a new one', async () => {
     render(
-      <BacklogContent 
-        selectedDate="2026-02-04" 
-        scheduledMap={new Map()} 
-        isDesktop={false} 
-        onItemTap={() => {}} 
-        activeIndex={1} 
-        onActiveIndexChange={() => {}} 
-      />
+      <BrowserRouter>
+        <BacklogContent 
+          selectedDate="2026-02-04" 
+          scheduledMap={new Map()} 
+          isDesktop={false} 
+          onItemTap={() => {}} 
+          activeIndex={1} 
+          onActiveIndexChange={() => {}} 
+        />
+      </BrowserRouter>
     );
 
-    fireEvent.click(screen.getByText('Start sub1')); // In Cat 1
+    const slide1 = screen.getByTestId('slide-cat1');
+    const slide2 = screen.getByTestId('slide-cat2');
+
+    fireEvent.click(within(slide1).getByText('Start sub1')); // In Cat 1
     expect(screen.getByText(/加入今日計畫 \(1\)/)).toBeInTheDocument();
 
     // Choice B logic: onToggleSelection with different category switches scope
     // Actually our mock uses onStartSelection for sub3
-    fireEvent.click(screen.getByText('Start sub3')); // In Cat 2
+    fireEvent.click(within(slide2).getByText('Start sub3')); // In Cat 2
     expect(screen.getByText(/加入今日計畫 \(1\)/)).toBeInTheDocument();
     expect(screen.getByTestId('slide-cat1')).toHaveClass('locked');
   });

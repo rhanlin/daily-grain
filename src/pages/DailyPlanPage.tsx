@@ -159,6 +159,7 @@ export const DailyPlanPage: React.FC = () => {
                 onItemTap={handleItemTap}
                 activeIndex={backlogIndex}
                 onActiveIndexChange={setBacklogIndex}
+                onClose={() => setIsDrawerOpen(false)}
               />
             </div>
           ) : (
@@ -176,6 +177,7 @@ export const DailyPlanPage: React.FC = () => {
                   onItemTap={handleItemTap}
                   activeIndex={backlogIndex}
                   onActiveIndexChange={setBacklogIndex}
+                  onClose={() => setIsDrawerOpen(false)}
                 />
               </DrawerContent>
             </Drawer>

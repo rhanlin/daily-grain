@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/features/auth/AuthContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { HomePage } from '@/pages/HomePage';
@@ -16,9 +16,10 @@ function App() {
       <Router>
         <AppLayout>
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<DailyPlanPage />} />
+            <Route path="/management" element={<HomePage />} />
             <Route path="/matrix" element={<MatrixPage />} />
-            <Route path="/daily-plan" element={<DailyPlanPage />} />
+            <Route path="/daily-plan" element={<Navigate to="/" replace />} />
             <Route path="/category/:categoryId" element={<CategoryDetailPage />} />
           </Routes>
           <Toaster 

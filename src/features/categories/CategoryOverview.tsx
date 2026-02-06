@@ -44,7 +44,7 @@ export const CategoryOverview: React.FC<{ onOpenCreateCategory: () => void }> = 
       >
         <FolderPlus className="h-12 w-12 text-muted-foreground" />
         <div className="space-y-2">
-          <h3 className="text-xl font-bold">尚無分類</h3>
+          <h3 className="text-xl font-bold">尚無任務管理項目</h3>
           <p className="text-muted-foreground">點擊建立一個分類來開始組織任務。</p>
         </div>
       </div>

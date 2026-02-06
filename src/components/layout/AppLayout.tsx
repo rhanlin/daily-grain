@@ -10,9 +10,9 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
   const location = useLocation();
 
   const navItems = [
-    { name: '主題分類', path: '/', icon: LayoutGrid },
+    { name: '每日計畫', path: '/', icon: Calendar },
     { name: '艾森豪矩陣', path: '/matrix', icon: ListTodo },
-    { name: '每日計畫', path: '/daily-plan', icon: Calendar },
+    { name: '任務管理', path: '/management', icon: LayoutGrid },
   ];
 
   return (
