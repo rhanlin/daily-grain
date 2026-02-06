@@ -21,3 +21,19 @@ export function formatLocalDate(date: Date): string {
 export function getLocalToday(): string {
   return formatLocalDate(new Date());
 }
+
+/**
+ * Adds a specified number of days to a YYYY-MM-DD string.
+ */
+export function addDays(dateStr: string, days: number): string {
+  const date = new Date(dateStr);
+  date.setDate(date.getDate() + days);
+  return formatLocalDate(date);
+}
+
+/**
+ * Subtracts a specified number of days from a YYYY-MM-DD string.
+ */
+export function subDays(dateStr: string, days: number): string {
+  return addDays(dateStr, -days);
+}
