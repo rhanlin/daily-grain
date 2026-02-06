@@ -136,7 +136,7 @@ describe('BacklogContent Multi-select logic (Category Scope)', () => {
     expect(screen.getByTestId('slide-cat2')).not.toHaveClass('locked');
   });
 
-  it('should switch category if starting selection in a new one', async () => {
+  it('should lock other categories when selection is active', async () => {
     render(
       <BrowserRouter>
         <BacklogContent 
@@ -154,12 +154,10 @@ describe('BacklogContent Multi-select logic (Category Scope)', () => {
     const slide2 = screen.getByTestId('slide-cat2');
 
     fireEvent.click(within(slide1).getByText('Start sub1')); // In Cat 1
-    expect(screen.getByText(/加入今日計畫 \(1\)/)).toBeInTheDocument();
-
-    // Choice B logic: onToggleSelection with different category switches scope
-    // Actually our mock uses onStartSelection for sub3
-    fireEvent.click(within(slide2).getByText('Start sub3')); // In Cat 2
-    expect(screen.getByText(/加入今日計畫 \(1\)/)).toBeInTheDocument();
-    expect(screen.getByTestId('slide-cat1')).toHaveClass('locked');
+    
+    // slide 2 should show Locked and NOT have buttons
+    expect(slide2).toHaveClass('locked');
+    expect(within(slide2).getByTestId('locked-msg')).toBeInTheDocument();
+    expect(within(slide2).queryByText('Start sub3')).not.toBeInTheDocument();
   });
 });

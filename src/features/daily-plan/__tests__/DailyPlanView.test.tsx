@@ -47,6 +47,7 @@ vi.mock('dexie-react-hooks', () => ({
 
 vi.mock('@dnd-kit/core', () => ({
   useDroppable: () => ({ setNodeRef: vi.fn() }),
+  useDndContext: () => ({ active: null }),
 }));
 
 describe('DailyPlanView', () => {

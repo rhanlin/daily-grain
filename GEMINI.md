@@ -26,6 +26,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - N/A (Transient UI State for swipe/edit); Persistent updates to `tasks` and `subtasks` tables. (014-daily-plan-ux-enhancement)
 - TypeScript 5.x, Node.js v24.13.0+ + React 18+, React Router DOM, Shadcn UI, Framer Motion (015-home-page-refactor)
 - N/A (UI and Routing only) (015-home-page-refactor)
+- TypeScript 5.x, Node.js v24.13.0+ + React 18+, Shadcn UI, Lucide Reac (016-fix-swipe-conflict)
+- N/A (UI state only) (016-fix-swipe-conflict)
 
 - TypeScript 5.x, Node.js 20+ (for tooling) + React 18+, Vite, TailwindCSS 4, Shadcn UI, Vites (001-time-allocation-app)
 
@@ -45,9 +47,9 @@ npm test && npm run lint
 TypeScript 5.x, Node.js 20+ (for tooling): Follow standard conventions
 
 ## Recent Changes
+- 016-fix-swipe-conflict: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Shadcn UI, Lucide Reac
+- 016-fix-swipe-conflict: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 015-home-page-refactor: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, React Router DOM, Shadcn UI, Framer Motion
-- 015-home-page-refactor: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-- 014-daily-plan-ux-enhancement: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Framer Motion, Shadcn UI (Dialog, Drawer), Lucide React, react-use
 
 
 ## ReactJS Principles

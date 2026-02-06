@@ -56,6 +56,9 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
   const { active } = useDndContext();
   const isDesktop = useMedia("(min-width: 768px)");
 
+  // SC-001: Derive overlay state to block swipes
+  const isOverlayOpen = isEditing || !!actionItem;
+
   // US1: Swipe gesture integration
   const swipeHandlers = useSwipe({
     onSwipeLeft: () => {
@@ -66,6 +69,7 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
       setDirection(-1);
       onDateChange(subDays(selectedDate, 1));
     },
+    disabled: isOverlayOpen,
   });
   
   const { setNodeRef } = useDroppable({
