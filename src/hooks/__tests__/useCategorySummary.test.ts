@@ -19,6 +19,7 @@ describe('useCategorySummary', () => {
       isArchived: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      orderIndex: 0
     });
 
     await db.tasks.bulkAdd([
@@ -64,6 +65,7 @@ describe('useCategorySummary', () => {
       isArchived: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      orderIndex: 0
     });
 
     const { result } = renderHook(() => useCategorySummary());

@@ -9,6 +9,24 @@ import { QuickCreateTaskDrawer } from '@/features/tasks/QuickCreateTaskDrawer';
 import { repository } from '@/lib/repository';
 import { toast } from 'sonner';
 
+import { 
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragStartEvent,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+
 export const CategoryOverview: React.FC<{ onOpenCreateCategory: () => void }> = ({ onOpenCreateCategory }) => {
   const summaries = useCategorySummary();
   const navigate = useNavigate();
@@ -17,6 +35,34 @@ export const CategoryOverview: React.FC<{ onOpenCreateCategory: () => void }> = 
   const [isActionDrawerOpen, setIsActionDrawerOpen] = useState(false);
   const [isEditDialogOpen, setIsEditOpen] = useState(false);
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+    if ('vibrate' in navigator) {
+      navigator.vibrate(50);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (over && active.id !== over.id && (summaries?.length || 0) > 1) {
+      const oldIndex = summaries!.findIndex((cat) => cat.id === active.id);
+      const newIndex = summaries!.findIndex((cat) => cat.id === over.id);
+      
+      const newOrder = arrayMove(summaries!, oldIndex, newIndex);
+      await repository.categories.updateOrder(newOrder.map(c => c.id));
+      toast.success('排序已更新');
+    }
+  };
 
   // FR-007: 捲動恢復保障 (Scroll Restoration)
   // 當所有對話框關閉時，確保 body 的 pointer-events 恢復正常
@@ -80,18 +126,31 @@ export const CategoryOverview: React.FC<{ onOpenCreateCategory: () => void }> = 
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {summaries.map((cat) => (
-          <CategoryCard 
-            key={cat.id} 
-            category={cat} 
-            onClick={() => {
-              navigate(`/category/${cat.id}`);
-            }}
-            onOpenMenu={() => handleOpenMenu(cat)}
-          />
-        ))}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <SortableContext 
+            items={summaries.map(c => c.id)} 
+            strategy={rectSortingStrategy}
+          >
+            {summaries.map((cat) => (
+              <CategoryCard 
+                key={cat.id} 
+                category={cat} 
+                isDragging={activeId === cat.id}
+                onClick={() => {
+                  navigate(`/category/${cat.id}`);
+                }}
+                onOpenMenu={() => handleOpenMenu(cat)}
+              />
+            ))}
+          </SortableContext>
+        </div>
+      </DndContext>
 
       <CategoryActionDrawer 
         category={selectedCategory}

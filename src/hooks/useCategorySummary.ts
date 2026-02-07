@@ -8,6 +8,7 @@ export interface CategorySummary {
   todoCount: number;
   completedCount: number;
   updatedAt: string;
+  orderIndex: number;
 }
 
 export const useCategorySummary = () => {
@@ -23,13 +24,12 @@ export const useCategorySummary = () => {
         color: cat.color,
         todoCount: catTasks.filter(t => t.status === 'TODO').length,
         completedCount: catTasks.filter(t => t.status === 'DONE').length,
-        updatedAt: cat.updatedAt
+        updatedAt: cat.updatedAt,
+        orderIndex: cat.orderIndex || 0
       };
     });
 
-    // Sort by updatedAt descending (or createdAt if preferred, but plan says newest first)
-    // Actually, repository.categories.getAll was updated to sort by createdAt desc in a previous turn.
-    // I'll stick to that logic if possible, or just sort by updatedAt for now if createdAt isn't indexed.
-    return summaries.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    // Sort by orderIndex ascending
+    return summaries.sort((a, b) => a.orderIndex - b.orderIndex);
   }, []);
 };

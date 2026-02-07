@@ -12,7 +12,7 @@ describe('useBacklog - 過濾優化驗證', () => {
   });
 
   it('應隱藏無子任務的 Task (FR-003)', async () => {
-    const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '' };
+    const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '', orderIndex: 0 };
     await db.categories.add(cat1);
 
     // 建立一個沒有子任務的 Task
@@ -26,7 +26,7 @@ describe('useBacklog - 過濾優化驗證', () => {
   });
 
   it('應在所有子任務都排程後隱藏 Task (FR-003)', async () => {
-    const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '' };
+    const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '', orderIndex: 0 };
     await db.categories.add(cat1);
 
     await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Task with Subs', status: 'TODO', description: '', eisenhower: 'Q1', createdAt: '', updatedAt: '' });
@@ -55,7 +55,7 @@ describe('useBacklog - 過濾優化驗證', () => {
   });
 
   it('應支援全域排程過濾 (Research Decision)', async () => {
-    const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '' };
+    const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '', orderIndex: 0 };
     await db.categories.add(cat1);
 
     await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Task with Subs', status: 'TODO', description: '', eisenhower: 'Q1', createdAt: '', updatedAt: '' });

@@ -4,17 +4,19 @@ import { v4 as uuidv4 } from 'uuid';
 export const repository = {
   categories: {
     async getAll() {
-      return await db.categories.filter(c => !c.isArchived).reverse().sortBy('createdAt');
+      return await db.categories.filter(c => !c.isArchived).sortBy('orderIndex');
     },
     async create(name: string, color: string) {
       const now = new Date().toISOString();
+      const count = await db.categories.count();
       const category: Category = {
         id: uuidv4(),
         name,
         color,
         createdAt: now,
         updatedAt: now,
-        isArchived: false
+        isArchived: false,
+        orderIndex: count
       };
       await db.categories.add(category);
       return category;
@@ -22,6 +24,14 @@ export const repository = {
     async update(id: string, updates: Partial<Category>) {
       const updatedAt = new Date().toISOString();
       await db.categories.update(id, { ...updates, updatedAt });
+    },
+    async updateOrder(ids: string[]) {
+      const updatedAt = new Date().toISOString();
+      await db.transaction('rw', db.categories, async () => {
+        for (let i = 0; i < ids.length; i++) {
+          await db.categories.update(ids[i], { orderIndex: i, updatedAt });
+        }
+      });
     },
     async delete(id: string) {
       // Soft delete category

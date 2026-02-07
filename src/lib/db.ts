@@ -7,6 +7,7 @@ export interface Category {
   createdAt: string;
   updatedAt: string;
   isArchived: boolean;
+  orderIndex: number;
 }
 
 export interface Task {
@@ -72,6 +73,19 @@ export class MyDatabase extends Dexie {
           subtask.createdAt = subtask.updatedAt || new Date().toISOString();
         }
       });
+    });
+
+    this.version(3).stores({
+      categories: 'id, name, updatedAt, isArchived, orderIndex'
+    }).upgrade(async tx => {
+      // Initialize orderIndex for existing categories based on createdAt
+      const categories = await tx.table('categories').toArray();
+      // Sort by createdAt ascending to assign indices
+      categories.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+      
+      for (let i = 0; i < categories.length; i++) {
+        await tx.table('categories').update(categories[i].id, { orderIndex: i });
+      }
     });
   }
 }

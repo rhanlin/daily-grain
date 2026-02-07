@@ -12,7 +12,7 @@ import { Target, Filter } from 'lucide-react';
 import { MatrixQuadrant, type MatrixItem } from './MatrixQuadrant';
 
 export const EisenhowerMatrix: React.FC = () => {
-  const [viewFilter, setViewFilter] = useState<'ALL' | 'TASK' | 'SUBTASK'>('ALL');
+  const [viewFilter, setViewFilter] = useState<'ALL' | 'TASK' | 'SUBTASK'>('TASK');
   const [focusedId, setFocusedId] = useState<string | null>(null);
 
   const allItems = useLiveQuery(async () => {

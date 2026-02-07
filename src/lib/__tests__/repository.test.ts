@@ -32,6 +32,28 @@ describe('repository.categories', () => {
     const archivedTask = await db.tasks.get(task.id);
     expect(archivedTask?.status).toBe('ARCHIVED');
   });
+
+  it('should update categories orderIndex', async () => {
+    const cat1 = await repository.categories.create('Cat 1', '#000');
+    const cat2 = await repository.categories.create('Cat 2', '#fff');
+    
+    // cat1 orderIndex should be 0, cat2 should be 1 (based on current implementation)
+    expect(cat1.orderIndex).toBe(0);
+    expect(cat2.orderIndex).toBe(1);
+
+    // Swap them
+    await repository.categories.updateOrder([cat2.id, cat1.id]);
+
+    const updated1 = await db.categories.get(cat1.id);
+    const updated2 = await db.categories.get(cat2.id);
+
+    expect(updated1?.orderIndex).toBe(1);
+    expect(updated2?.orderIndex).toBe(0);
+
+    const all = await repository.categories.getAll();
+    expect(all[0].id).toBe(cat2.id);
+    expect(all[1].id).toBe(cat1.id);
+  });
 });
 
 describe('repository.tasks', () => {
