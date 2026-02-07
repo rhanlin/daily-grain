@@ -219,9 +219,9 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
 
       {/* FR-003: Floating Action Bar */}
       {selectedIds.size > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur border-t z-50 flex items-center justify-between gap-4 animate-in slide-in-from-bottom-full duration-200">
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t z-50 flex items-center justify-between gap-4 animate-in slide-in-from-bottom-full duration-200">
           <Button variant="ghost" onClick={resetSelection}>取消</Button>
-          <Button className="flex-1" onClick={batchAddToPlan}>
+          <Button className="flex-1 shadow-lg shadow-primary/10" onClick={batchAddToPlan}>
             加入今日計畫 ({selectedIds.size})
           </Button>
         </div>

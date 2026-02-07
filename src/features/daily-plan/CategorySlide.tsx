@@ -40,7 +40,7 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
   const isLocked = isSelectionMode && activeCategoryId !== category.id;
 
   return (
-    <div className={`space-y-3 h-full transition-all duration-300 ${isLocked ? 'opacity-30 grayscale pointer-events-none' : ''}`}>
+    <div className={`space-y-3 h-full transition-all duration-300 ${isLocked ? 'opacity-30 grayscale pointer-events-none' : ''} ${isSelectionMode ? 'pb-24' : 'pb-4'}`}>
       <div className="flex items-center gap-2 px-1">
         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: category.color }} />
         <h3 className="font-bold text-xs uppercase text-muted-foreground truncate">{category.name}</h3>
@@ -269,9 +269,13 @@ const DraggableItem = ({
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   } : undefined;
 
+  // Track pointer movement to distinguish tap from scroll
+  const startPosRef = React.useRef({ x: 0, y: 0 });
+  const isMovingRef = React.useRef(false);
+
   // FR-001: Integration of useLongPress for mobile selection
   const longPress = useLongPress(() => {
-    if (!isDesktop && !isDisabled) {
+    if (!isDesktop && !isDisabled && !isMovingRef.current) {
       onLongPress?.();
     }
   }, {
@@ -279,10 +283,40 @@ const DraggableItem = ({
     isPreventDefault: false,
   });
 
+  const handlePointerDown = (e: React.PointerEvent) => {
+    startPosRef.current = { x: e.clientX, y: e.clientY };
+    isMovingRef.current = false;
+    
+    if (!isDesktop && !isDisabled) {
+      longPress.onMouseDown(e as any);
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    const dist = Math.sqrt(
+      Math.pow(e.clientX - startPosRef.current.x, 2) + 
+      Math.pow(e.clientY - startPosRef.current.y, 2)
+    );
+    if (dist > 10) {
+      isMovingRef.current = true;
+    }
+  };
+
+  const handlePointerUp = () => {
+    if (!isDesktop && !isDisabled) {
+      longPress.onMouseUp();
+    }
+
+    if (!isMovingRef.current) {
+      onItemTap();
+    }
+  };
+
   // FR-007: onItemTap will be empty for TASK headers, preventing any action
   const eventHandlers = (isDesktop && !isDisabled) ? listeners : { 
-    onClick: onItemTap,
-    ...(!isDesktop && !isDisabled ? longPress : {})
+    onPointerDown: handlePointerDown,
+    onPointerMove: handlePointerMove,
+    onPointerUp: handlePointerUp,
   };
 
   return (
