@@ -72,8 +72,15 @@ export const DailyPlanDateSelector: React.FC<DailyPlanDateSelectorProps> = ({
         {Trigger}
       </DrawerTrigger>
       <DrawerContent>
-        <div className="p-4 flex justify-center">
-          {CalendarContent}
+        <div className="flex justify-center pb-safe">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={handleSelect}
+            locale={zhTW}
+            initialFocus
+            className='w-full max-w-[calc(100vw-2rem)] mx-auto'
+          />
         </div>
       </DrawerContent>
     </Drawer>

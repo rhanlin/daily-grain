@@ -32,6 +32,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - IndexedDB (Categories table v3 with `orderIndex`) (017-task-ui-refinement)
 - TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB), Tailwind CSS 4, Shadcn UI (018-backlog-rollover-fixes)
 - IndexedDB (Updates `dailyPlanItems`) (018-backlog-rollover-fixes)
+- TypeScript 5.x, Node.js v24.13.0+ + React 18+, TailwindCSS 4, Shadcn UI (Drawer), Lucide Reac (019-fix-mobile-calendar-overflow)
+- N/A (UI Layout Fix) (019-fix-mobile-calendar-overflow)
 
 - TypeScript 5.x, Node.js 20+ (for tooling) + React 18+, Vite, TailwindCSS 4, Shadcn UI, Vites (001-time-allocation-app)
 
@@ -51,9 +53,9 @@ npm test && npm run lint
 TypeScript 5.x, Node.js 20+ (for tooling): Follow standard conventions
 
 ## Recent Changes
+- 019-fix-mobile-calendar-overflow: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, TailwindCSS 4, Shadcn UI (Drawer), Lucide Reac
 - 018-backlog-rollover-fixes: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB), Tailwind CSS 4, Shadcn UI
 - 018-backlog-rollover-fixes: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-- 017-task-ui-refinement: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, dnd-kit, Tailwind CSS 4, Dexie.js
 
 
 ## ReactJS Principles
