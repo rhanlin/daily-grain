@@ -182,7 +182,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default', 
         </DialogContent>
       </Dialog>
 
-      <Drawer open={isActionSheetOpen} onOpenChange={setIsActionSheetOpen}>
+      <Drawer repositionInputs={false} open={isActionSheetOpen} onOpenChange={setIsActionSheetOpen}>
         <DrawerContent>
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>

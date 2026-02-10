@@ -163,7 +163,7 @@ export const DailyPlanPage: React.FC = () => {
               />
             </div>
           ) : (
-            <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+            <Drawer repositionInputs={false} open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
               <DrawerTrigger asChild>
                 <Button className="fixed bottom-24 right-6 h-12 w-12 rounded-full shadow-lg z-50">
                   <Plus className="h-6 w-6" />

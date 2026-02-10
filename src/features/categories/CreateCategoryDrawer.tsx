@@ -57,7 +57,7 @@ export const CreateCategoryDrawer: React.FC<CreateCategoryDrawerProps> = ({ chil
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer repositionInputs={false} open={open} onOpenChange={onOpenChange}>
       {children && <DrawerTrigger asChild>{children}</DrawerTrigger>}
       <DrawerContent>
         <div className="mx-auto w-full max-w-sm">

@@ -123,7 +123,7 @@ export const SubTaskList: React.FC<SubTaskListProps> = ({ taskId, viewMode = 'de
         </DialogContent>
       </Dialog>
 
-      <Drawer open={!!actionSubTask} onOpenChange={(open) => !open && setActionSubTask(null)}>
+      <Drawer repositionInputs={false} open={!!actionSubTask} onOpenChange={(open) => !open && setActionSubTask(null)}>
         <DrawerContent>
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>

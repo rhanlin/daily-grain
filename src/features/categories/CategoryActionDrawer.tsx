@@ -29,7 +29,7 @@ export const CategoryActionDrawer: React.FC<CategoryActionDrawerProps> = ({
   if (!category) return null;
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer repositionInputs={false} open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
