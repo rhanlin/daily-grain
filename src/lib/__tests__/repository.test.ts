@@ -61,6 +61,7 @@ describe('repository.tasks', () => {
     await db.categories.clear();
     await db.tasks.clear();
     await db.subtasks.clear();
+    await db.dailyPlanItems.clear();
   });
 
   it('should create task with default Q4 quadrant', async () => {
@@ -71,6 +72,49 @@ describe('repository.tasks', () => {
     const saved = await db.tasks.get(task.id);
     expect(saved?.eisenhower).toBe('Q4');
   });
+
+  it('should cascade delete subtasks and daily plan items when task is deleted', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Task to Delete');
+    const subtask1 = await repository.subtasks.create(task.id, 'Subtask 1');
+    const subtask2 = await repository.subtasks.create(task.id, 'Subtask 2');
+
+    // Add task and subtask1 to daily plan
+    await db.dailyPlanItems.add({
+      id: crypto.randomUUID(),
+      date: '2026-02-11',
+      refId: task.id,
+      refType: 'TASK',
+      orderIndex: 0,
+      isRollover: false,
+      updatedAt: new Date().toISOString()
+    });
+    await db.dailyPlanItems.add({
+      id: crypto.randomUUID(),
+      date: '2026-02-11',
+      refId: subtask1.id,
+      refType: 'SUBTASK',
+      orderIndex: 1,
+      isRollover: false,
+      updatedAt: new Date().toISOString()
+    });
+
+    await repository.tasks.delete(task.id);
+
+    // Verify Task deleted
+    const deletedTask = await db.tasks.get(task.id);
+    expect(deletedTask).toBeUndefined();
+
+    // Verify Subtasks deleted
+    const deletedSubtask1 = await db.subtasks.get(subtask1.id);
+    const deletedSubtask2 = await db.subtasks.get(subtask2.id);
+    expect(deletedSubtask1).toBeUndefined();
+    expect(deletedSubtask2).toBeUndefined();
+
+    // Verify Daily Plan items deleted
+    const dailyPlanItems = await db.dailyPlanItems.toArray();
+    expect(dailyPlanItems).toHaveLength(0);
+  });
 });
 
 describe('repository.subtasks', () => {
@@ -78,6 +122,7 @@ describe('repository.subtasks', () => {
     await db.categories.clear();
     await db.tasks.clear();
     await db.subtasks.clear();
+    await db.dailyPlanItems.clear();
   });
 
   it('should inherit quadrant from parent task', async () => {
@@ -96,5 +141,31 @@ describe('repository.subtasks', () => {
   it('should fallback to Q4 if parent task is missing', async () => {
     const subtask = await repository.subtasks.create('non-existent-id', 'Fallback Subtask');
     expect(subtask.eisenhower).toBe('Q4');
+  });
+
+  it('should cascade delete daily plan items when subtask is deleted', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Parent Task');
+    const subtask = await repository.subtasks.create(task.id, 'Subtask to Delete');
+
+    await db.dailyPlanItems.add({
+      id: crypto.randomUUID(),
+      date: '2026-02-11',
+      refId: subtask.id,
+      refType: 'SUBTASK',
+      orderIndex: 0,
+      isRollover: false,
+      updatedAt: new Date().toISOString()
+    });
+
+    await repository.subtasks.delete(subtask.id);
+
+    // Verify Subtask deleted
+    const deletedSubtask = await db.subtasks.get(subtask.id);
+    expect(deletedSubtask).toBeUndefined();
+
+    // Verify Daily Plan item deleted
+    const dailyPlanItems = await db.dailyPlanItems.toArray();
+    expect(dailyPlanItems).toHaveLength(0);
   });
 });

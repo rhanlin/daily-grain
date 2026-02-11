@@ -6,7 +6,28 @@ import { getLocalToday } from '@/lib/utils';
 
 export const useDailyPlan = (date: string) => {
   const planItems = useLiveQuery(
-    () => repository.dailyPlan.getByDate(date),
+    async () => {
+      const items = await repository.dailyPlan.getByDate(date);
+      // Filter items to exclude archived task references
+      const filteredItems = [];
+      for (const item of items) {
+        if (item.refType === 'TASK') {
+          const task = await db.tasks.get(item.refId);
+          if (task && task.status !== 'ARCHIVED') {
+            filteredItems.push(item);
+          }
+        } else if (item.refType === 'SUBTASK') {
+          const subtask = await db.subtasks.get(item.refId);
+          if (subtask) {
+            const parentTask = await db.tasks.get(subtask.taskId);
+            if (parentTask && parentTask.status !== 'ARCHIVED') {
+              filteredItems.push(item);
+            }
+          }
+        }
+      }
+      return filteredItems;
+    },
     [date]
   );
 

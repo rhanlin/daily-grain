@@ -26,4 +26,25 @@ describe('useDailyPlan Hook', () => {
       expect(updated[1].id).toBe(item1.id);
     });
   });
+
+  it('should exclude items from archived tasks (US2)', async () => {
+    const date = '2026-02-01';
+    const cat = await repository.categories.create('Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Task 1');
+    const subtask = await repository.subtasks.create(task.id, 'Subtask 1');
+
+    await repository.dailyPlan.add(date, task.id, 'TASK', 1000);
+    await repository.dailyPlan.add(date, subtask.id, 'SUBTASK', 2000);
+
+    const { result } = renderHook(() => useDailyPlan(date));
+    await waitFor(() => expect(result.current.planItems).toHaveLength(2));
+
+    // Archive the task
+    await db.tasks.update(task.id, { status: 'ARCHIVED' });
+
+    // Should disappear from plan view (but remain in DB until manually removed or cleanup logic runs)
+    // Note: useDailyPlan implementation filters them out on the fly
+    const { result: resultAfter } = renderHook(() => useDailyPlan(date));
+    await waitFor(() => expect(resultAfter.current.planItems).toHaveLength(0));
+  });
 });

@@ -34,7 +34,7 @@ export const useBacklog = (date: string) => {
       // Find subtasks belonging to this category's tasks that are in the backlog
       const catSubTasks = backlogSubTasks.filter(s => {
         const parentTask = allTasks.find(t => t.id === s.taskId);
-        return parentTask?.categoryId === cat.id;
+        return parentTask?.categoryId === cat.id && parentTask?.status !== 'ARCHIVED';
       });
 
       // FR-003 & FR-004: Only include parent Tasks that have at least one visible subtask

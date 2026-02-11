@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useBacklog } from '../useBacklog';
 import { db } from '@/lib/db';
+import { repository } from '@/lib/repository';
 
 describe('useBacklog - 過濾優化驗證', () => {
   beforeEach(async () => {
@@ -68,6 +69,22 @@ describe('useBacklog - 過濾優化驗證', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     // s1 已被全球性排程，所以今天不應出現在 Backlog
+    expect(result.current.groups).toHaveLength(0);
+  });
+
+  it('應隱藏已封存 Task 的子任務 (US2)', async () => {
+    const cat1 = { id: 'cat1', name: 'Cat 1', color: '#000', isArchived: false, createdAt: '', updatedAt: '', orderIndex: 0 };
+    await db.categories.add(cat1);
+
+    // 建立一個已封存的 Task 和其子任務
+    const task = await repository.tasks.create('cat1', 'Archived Task');
+    await db.tasks.update(task.id, { status: 'ARCHIVED' });
+    await db.subtasks.add({ id: 's1', taskId: task.id, title: 'Archived Sub', isCompleted: false, eisenhower: 'Q1', createdAt: '', updatedAt: '' });
+
+    const { result } = renderHook(() => useBacklog('2026-02-03'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    // 因為 Task 已封存，應被隱藏
     expect(result.current.groups).toHaveLength(0);
   });
 });

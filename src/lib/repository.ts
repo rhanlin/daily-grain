@@ -80,19 +80,24 @@ export const repository = {
       // Auto-complete check logic could be triggered here or via a dedicated hook
     },
     async delete(id: string) {
-      // Hard Delete Task
-      await db.tasks.delete(id);
-      
-      // Hard Delete Subtasks (Cascade)
-      const subtasks = await db.subtasks.where('taskId').equals(id).toArray();
-      for (const sub of subtasks) {
-        await db.subtasks.delete(sub.id);
+      await db.transaction('rw', db.tasks, db.subtasks, db.dailyPlanItems, async () => {
+        // Hard Delete Subtasks (Cascade)
+        const subtasks = await db.subtasks.where('taskId').equals(id).toArray();
+        const subtaskIds = subtasks.map(s => s.id);
+        
+        await db.subtasks.bulkDelete(subtaskIds);
+        
         // Remove Subtasks from Daily Plans
-        await db.dailyPlanItems.where('refId').equals(sub.id).delete();
-      }
+        if (subtaskIds.length > 0) {
+            await db.dailyPlanItems.where('refId').anyOf(subtaskIds).delete();
+        }
 
-      // Remove Task from Daily Plans
-      await db.dailyPlanItems.where('refId').equals(id).delete();
+        // Remove Task from Daily Plans
+        await db.dailyPlanItems.where('refId').equals(id).delete();
+        
+        // Hard Delete Task
+        await db.tasks.delete(id);
+      });
     }
   },
   subtasks: {
@@ -144,11 +149,11 @@ export const repository = {
       }
     },
     async delete(id: string) {
-      await db.subtasks.delete(id);
-      // Remove from Daily Plan
-      await db.dailyPlanItems.where('refId').equals(id).delete();
-      
-      // Trigger parent check? Maybe.
+      await db.transaction('rw', db.subtasks, db.dailyPlanItems, async () => {
+        await db.subtasks.delete(id);
+        // Remove from Daily Plan
+        await db.dailyPlanItems.where('refId').equals(id).delete();
+      });
     }
   },
   utils: {
