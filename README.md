@@ -71,3 +71,16 @@ export default defineConfig([
   },
 ])
 ```
+
+## Git Hooks
+
+This project uses **Husky** and **lint-staged** to ensure code quality.
+
+- **pre-commit**: Automatically runs `lint-staged` (ESLint) and `npm run build` (Type check & Build).
+
+If you need to bypass the hooks for a specific commit (e.g., WIP), use the `--no-verify` flag:
+
+```bash
+git commit -m "your message" --no-verify
+```
+
