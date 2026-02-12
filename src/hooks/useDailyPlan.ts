@@ -32,19 +32,29 @@ export const useDailyPlan = (date: string) => {
   );
 
   const addToPlan = async (refId: string, refType: 'TASK' | 'SUBTASK') => {
-    // Check if the item exists on any date
-    const existingItem = await db.dailyPlanItems.where('refId').equals(refId).first();
-
-    if (existingItem) {
-      // If it exists on the same date, do nothing.
-      if (existingItem.date === date) {
-        return { status: 'noop' };
-      }
-      // If it exists on a different date, signal a conflict.
-      return { status: 'conflict', existingItem };
+    // T019: Multi-time/Daily subtasks can be added to multiple dates
+    let isRecurring = false;
+    if (refType === 'SUBTASK') {
+        const sub = await db.subtasks.get(refId);
+        if (sub && (sub.type === 'multi-time' || sub.type === 'daily')) {
+            isRecurring = true;
+        }
     }
 
-    // If it doesn't exist anywhere, add it.
+    // Check if the item exists on any date
+    const existingItems = await db.dailyPlanItems.where('refId').equals(refId).toArray();
+    const existingOnCurrentDate = existingItems.find(item => item.date === date);
+
+    if (existingOnCurrentDate) {
+      return { status: 'noop' };
+    }
+
+    if (existingItems.length > 0 && !isRecurring) {
+      // If it exists on a different date and is NOT recurring, signal a conflict.
+      return { status: 'conflict', existingItem: existingItems[0] };
+    }
+
+    // If it doesn't exist on current date (and either doesn't exist elsewhere or is recurring), add it.
     const maxItem = await db.dailyPlanItems.where('date').equals(date).reverse().sortBy('orderIndex');
     const nextOrder = maxItem.length > 0 ? maxItem[0].orderIndex + 1000 : 1000;
     

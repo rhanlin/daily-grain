@@ -1,6 +1,6 @@
 import React from 'react';
 import { type Category, type Task, type SubTask } from '@/lib/db';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Infinity as InfinityIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { useDraggable } from '@dnd-kit/core';
@@ -93,7 +93,15 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
                     {isSelectionMode && (
                       <Checkbox checked={isSelected} className="rounded-full" />
                     )}
-                    <span className='flex-1 truncate'>{sub.title}</span>
+                    <div className="flex items-center gap-1 flex-1 min-w-0">
+                      <span className='truncate'>{sub.title}</span>
+                      {sub.type === 'multi-time' && (
+                        <span className={`text-[10px] font-mono shrink-0 ${(sub as any).completedCount > (sub.repeatLimit || 0) ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
+                          ({(sub as any).completedCount || 0}/{sub.repeatLimit})
+                        </span>
+                      )}
+                      {sub.type === 'daily' && <InfinityIcon className="h-3 w-3 text-blue-400 shrink-0" />}
+                    </div>
                   </div>
                   <div className='flex items-center gap-2'>
                     {scheduledDate && (
@@ -208,7 +216,15 @@ const BacklogTaskItem = ({
                     {isSelectionMode && (
                       <Checkbox checked={isSelected} className="rounded-full" />
                     )}
-                    <span className='flex-1 truncate'>{sub.title}</span>
+                    <div className="flex items-center gap-1 flex-1 min-w-0">
+                      <span className='truncate'>{sub.title}</span>
+                      {sub.type === 'multi-time' && (
+                        <span className={`text-[10px] font-mono shrink-0 ${(sub as any).completedCount > (sub.repeatLimit || 0) ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
+                          ({(sub as any).completedCount || 0}/{sub.repeatLimit})
+                        </span>
+                      )}
+                      {sub.type === 'daily' && <InfinityIcon className="h-3 w-3 text-blue-400 shrink-0" />}
+                    </div>
                   </div>
                   <div className='flex items-center gap-2'>
                     {subScheduledDate && (

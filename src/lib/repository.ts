@@ -1,4 +1,4 @@
-import { db, type Category, type Task, type SubTask, type DailyPlanItem } from './db';
+import { db, type Category, type Task, type SubTask, type DailyPlanItem, type SubTaskType } from './db';
 import { v4 as uuidv4 } from 'uuid';
 
 export const repository = {
@@ -138,7 +138,7 @@ export const repository = {
     async getByTask(taskId: string) {
       return await db.subtasks.where('taskId').equals(taskId).toArray();
     },
-    async create(taskId: string, title: string) {
+    async create(taskId: string, title: string, type: SubTaskType = 'one-time', repeatLimit?: number) {
       const now = new Date().toISOString();
       
       // Fetch parent task to inherit Eisenhower value
@@ -150,6 +150,8 @@ export const repository = {
         taskId,
         title,
         isCompleted: false,
+        type,
+        repeatLimit,
         eisenhower: inheritedEisenhower,
         createdAt: now,
         updatedAt: now
@@ -160,6 +162,12 @@ export const repository = {
     },
     async update(id: string, updates: Partial<SubTask>) {
       const updatedAt = new Date().toISOString();
+      
+      // T006.1: Handle type-switching edge cases
+      if (updates.type === 'one-time') {
+        updates.repeatLimit = undefined;
+      }
+
       await db.subtasks.update(id, { ...updates, updatedAt });
 
       // Auto-complete parent task
@@ -207,6 +215,7 @@ export const repository = {
         refType,
         orderIndex,
         isRollover: false,
+        isCompleted: false, // T005: Initialize as false
         updatedAt: now
       };
       await db.dailyPlanItems.add(item);
@@ -215,6 +224,45 @@ export const repository = {
     async updateOrder(id: string, orderIndex: number) {
       const updatedAt = new Date().toISOString();
       await db.dailyPlanItems.update(id, { orderIndex, updatedAt });
+    },
+    // T006: Handle decoupling logic for multi-time/daily tasks
+    async toggleCompletion(itemId: string, isCompleted: boolean) {
+      const updatedAt = new Date().toISOString();
+      
+      await db.transaction('rw', db.tasks, db.subtasks, db.dailyPlanItems, async () => {
+        const item = await db.dailyPlanItems.get(itemId);
+        if (!item) return;
+
+        // Update DailyPlanItem status
+        await db.dailyPlanItems.update(itemId, { isCompleted, updatedAt });
+
+        // If it's a subtask, check if we need to sync with SubTask definition
+        if (item.refType === 'SUBTASK') {
+          const subtask = await db.subtasks.get(item.refId);
+          if (subtask && subtask.type === 'one-time') {
+            // One-time: Sync with SubTask definition
+            await db.subtasks.update(subtask.id, { isCompleted, updatedAt });
+            await repository.subtasks.syncParentTaskStatus(subtask.taskId);
+          } else if (subtask && subtask.type === 'multi-time') {
+              // Multi-time: Check if all instances are done to mark SubTask definition as completed
+              const completedCount = await db.dailyPlanItems
+                .where('refId').equals(subtask.id)
+                .filter(i => i.isCompleted)
+                .count();
+              
+              const isFullyDone = subtask.repeatLimit ? completedCount >= subtask.repeatLimit : true;
+              await db.subtasks.update(subtask.id, { isCompleted: isFullyDone, updatedAt });
+              await repository.subtasks.syncParentTaskStatus(subtask.taskId);
+          }
+        } else if (item.refType === 'TASK') {
+            // Task: Sync with Task definition status
+            await db.tasks.update(item.refId, { 
+                status: isCompleted ? 'DONE' : 'TODO', 
+                updatedAt,
+                completedAt: isCompleted ? updatedAt : undefined
+            });
+        }
+      });
     }
   }
 };

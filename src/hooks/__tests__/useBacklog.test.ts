@@ -32,8 +32,8 @@ describe('useBacklog - 過濾優化驗證', () => {
 
     await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Task with Subs', status: 'TODO', description: '', eisenhower: 'Q1', createdAt: '', updatedAt: '' });
     await db.subtasks.bulkAdd([
-      { id: 's1', taskId: 't1', title: 'Sub 1', isCompleted: false, eisenhower: 'Q1', createdAt: '', updatedAt: '' },
-      { id: 's2', taskId: 't1', title: 'Sub 2', isCompleted: false, eisenhower: 'Q1', createdAt: '', updatedAt: '' }
+      { id: 's1', taskId: 't1', title: 'Sub 1', isCompleted: false, type: 'one-time', eisenhower: 'Q1', createdAt: '', updatedAt: '' },
+      { id: 's2', taskId: 't1', title: 'Sub 2', isCompleted: false, type: 'one-time', eisenhower: 'Q1', createdAt: '', updatedAt: '' }
     ]);
 
     // 初始狀態應顯示
@@ -45,11 +45,11 @@ describe('useBacklog - 過濾優化驗證', () => {
     expect(result.current.groups[0].tasks).toHaveLength(1);
 
     // 將 s1 加入計畫
-    await db.dailyPlanItems.add({ id: 'p1', date: '2026-02-03', refId: 's1', refType: 'SUBTASK', orderIndex: 1, isRollover: false, updatedAt: '' });
+    await db.dailyPlanItems.add({ id: 'p1', date: '2026-02-03', refId: 's1', refType: 'SUBTASK', orderIndex: 1, isRollover: false, isCompleted: false, updatedAt: '' });
     await waitFor(() => expect(result.current.groups[0].subtasks).toHaveLength(1)); // 剩餘 s2
 
     // 將 s2 加入計畫
-    await db.dailyPlanItems.add({ id: 'p2', date: '2026-02-03', refId: 's2', refType: 'SUBTASK', orderIndex: 2, isRollover: false, updatedAt: '' });
+    await db.dailyPlanItems.add({ id: 'p2', date: '2026-02-03', refId: 's2', refType: 'SUBTASK', orderIndex: 2, isRollover: false, isCompleted: false, updatedAt: '' });
     
     // 現在 Task 應隱藏
     await waitFor(() => expect(result.current.groups).toHaveLength(0));
@@ -60,10 +60,10 @@ describe('useBacklog - 過濾優化驗證', () => {
     await db.categories.add(cat1);
 
     await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Task with Subs', status: 'TODO', description: '', eisenhower: 'Q1', createdAt: '', updatedAt: '' });
-    await db.subtasks.add({ id: 's1', taskId: 't1', title: 'Sub 1', isCompleted: false, eisenhower: 'Q1', createdAt: '', updatedAt: '' });
+    await db.subtasks.add({ id: 's1', taskId: 't1', title: 'Sub 1', isCompleted: false, type: 'one-time', eisenhower: 'Q1', createdAt: '', updatedAt: '' });
 
     // s1 被排程在「明天」
-    await db.dailyPlanItems.add({ id: 'p1', date: '2026-02-04', refId: 's1', refType: 'SUBTASK', orderIndex: 1, isRollover: false, updatedAt: '' });
+    await db.dailyPlanItems.add({ id: 'p1', date: '2026-02-04', refId: 's1', refType: 'SUBTASK', orderIndex: 1, isRollover: false, isCompleted: false, updatedAt: '' });
 
     const { result } = renderHook(() => useBacklog('2026-02-03')); // 檢視今天
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -79,7 +79,7 @@ describe('useBacklog - 過濾優化驗證', () => {
     // 建立一個已封存的 Task 和其子任務
     const task = await repository.tasks.create('cat1', 'Archived Task');
     await db.tasks.update(task.id, { status: 'ARCHIVED' });
-    await db.subtasks.add({ id: 's1', taskId: task.id, title: 'Archived Sub', isCompleted: false, eisenhower: 'Q1', createdAt: '', updatedAt: '' });
+    await db.subtasks.add({ id: 's1', taskId: task.id, title: 'Archived Sub', isCompleted: false, type: 'one-time', eisenhower: 'Q1', createdAt: '', updatedAt: '' });
 
     const { result } = renderHook(() => useBacklog('2026-02-03'));
     await waitFor(() => expect(result.current.loading).toBe(false));

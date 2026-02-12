@@ -31,13 +31,17 @@ export const rolloverUnfinishedItems = async (today: string) => {
         continue;
       }
 
-      let isCompleted = false;
-      if (item.refType === 'TASK') {
-        const task = await db.tasks.get(item.refId);
-        isCompleted = task?.status === 'DONE';
-      } else {
-        const subtask = await db.subtasks.get(item.refId);
-        isCompleted = subtask?.isCompleted || false;
+      // T020: Priority use item.isCompleted, fallback to Task/SubTask status for migration safety
+      let isCompleted = item.isCompleted || false;
+      
+      if (!item.isCompleted) {
+          if (item.refType === 'TASK') {
+            const task = await db.tasks.get(item.refId);
+            isCompleted = task?.status === 'DONE';
+          } else {
+            const subtask = await db.subtasks.get(item.refId);
+            isCompleted = subtask?.isCompleted || false;
+          }
       }
 
       if (!isCompleted) {

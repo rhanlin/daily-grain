@@ -21,9 +21,9 @@ describe('rolloverUnfinishedItems', () => {
 
     // Add them to yesterday's plan
     await db.dailyPlanItems.bulkAdd([
-      { id: 'p1', date: yesterday, refId: 't1', refType: 'TASK', orderIndex: 0, isRollover: false, updatedAt: '' },
-      { id: 'p2', date: yesterday, refId: 't2', refType: 'TASK', orderIndex: 1, isRollover: false, updatedAt: '' },
-      { id: 'p3', date: yesterday, refId: 't3', refType: 'TASK', orderIndex: 2, isRollover: false, updatedAt: '' },
+      { id: 'p1', date: yesterday, refId: 't1', refType: 'TASK', orderIndex: 0, isRollover: false, isCompleted: false, updatedAt: '' },
+      { id: 'p2', date: yesterday, refId: 't2', refType: 'TASK', orderIndex: 1, isRollover: false, isCompleted: false, updatedAt: '' },
+      { id: 'p3', date: yesterday, refId: 't3', refType: 'TASK', orderIndex: 2, isRollover: false, isCompleted: true, updatedAt: '' },
     ]);
 
     // Run rollover

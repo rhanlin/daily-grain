@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useSubTask } from '../useSubTask';
 import { db } from '@/lib/db';
@@ -21,6 +21,22 @@ describe('useSubTask', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.subtasks).toHaveLength(1);
     expect(result.current.subtasks[0].title).toBe('Sub 1');
+  });
+
+  it('should create subtask with type and repeatLimit', async () => {
+    const cat = await repository.categories.create('Test', '#000');
+    const task = await repository.tasks.create(cat.id, 'Task');
+
+    const { result } = renderHook(() => useSubTask(task.id));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.createSubTask('Multi Sub', 'multi-time', 3);
+    });
+
+    await waitFor(() => expect(result.current.subtasks).toHaveLength(1));
+    expect(result.current.subtasks[0].type).toBe('multi-time');
+    expect(result.current.subtasks[0].repeatLimit).toBe(3);
   });
 
   it('should update parent task status via repository when updating subtask', async () => {

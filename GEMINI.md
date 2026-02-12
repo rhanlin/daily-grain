@@ -36,6 +36,10 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - N/A (UI Layout Fix) (019-fix-mobile-calendar-overflow)
 - TypeScript 5.x, React 18+ + Dexie.js, dexie-react-hooks (020-fix-cleanup-subtasks)
 - IndexedDB (via Dexie) (020-fix-cleanup-subtasks)
+- TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB), Shadcn UI, Lucide Reac (022-subtask-recurring-types)
+- IndexedDB (via Dexie) - Upgrade to Version 4 required. (022-subtask-recurring-types)
+- TypeScript 5.x, Node.js v24.13.0+ + React 18+, Vite, TailwindCSS 4, Shadcn UI, Dexie.js (IndexedDB) (022-subtask-recurring-types)
+- IndexedDB (via Dexie.js) - Schema v4 Migration (022-subtask-recurring-types)
 
 - TypeScript 5.x, Node.js 20+ (for tooling) + React 18+, Vite, TailwindCSS 4, Shadcn UI, Vites (001-time-allocation-app)
 
@@ -55,9 +59,9 @@ npm test && npm run lint
 TypeScript 5.x, Node.js 20+ (for tooling): Follow standard conventions
 
 ## Recent Changes
-- 021-fix-task-status-sync: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB)
-- 021-fix-task-status-sync: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB)
-- 020-fix-cleanup-subtasks: Added TypeScript 5.x, React 18+ + Dexie.js, dexie-react-hooks
+- 022-subtask-recurring-types: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Vite, TailwindCSS 4, Shadcn UI, Dexie.js (IndexedDB)
+- 022-subtask-recurring-types: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB)
+- 022-subtask-recurring-types: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB), Shadcn UI, Lucide Reac
 
 
 ## ReactJS Principles

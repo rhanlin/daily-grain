@@ -10,7 +10,7 @@ import { TaskItem } from '../tasks/TaskItem';
 import { db, type Task } from '@/lib/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useDroppable, useDndContext } from '@dnd-kit/core';
-import { X, Trash2, Pencil } from 'lucide-react';
+import { X, Trash2, Pencil, Infinity as InfinityIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
   Drawer,
@@ -312,26 +312,38 @@ import { useSubTask } from '@/hooks/useSubTask';
 
 // New component specifically for rendering a sub-task within the daily plan
 const PlanSubTaskItem: React.FC<{ item: any, isDesktop: boolean, onOpenMenu: () => void }> = ({ item, isDesktop, onOpenMenu }) => {
-  const { updateSubTask } = useSubTask(item.parentTask?.id);
+  const { subtasks } = useSubTask(item.parentTask?.id);
+  const subtaskDef = subtasks.find((s: any) => s.id === item.refId);
 
   if (!item.data || !item.parentTask) {
     return null; // Or a loading/error state
   }
   
-  const handleCheckedChange = (checked: boolean) => {
-    updateSubTask(item.data.id, { isCompleted: checked });
+  const handleCheckedChange = async (checked: boolean) => {
+    await repository.dailyPlan.toggleCompletion(item.id, checked);
   };
 
+  const isExceeded = subtaskDef?.type === 'multi-time' && 
+    (subtaskDef as any).completedCount > (subtaskDef.repeatLimit || 0);
+
   return (
-    <div className={`border rounded-lg p-3 bg-card flex items-center gap-2 shadow-sm text-sm transition-opacity ${item.data.isCompleted ? 'opacity-40' : ''}`}>
+    <div className={`border rounded-lg p-3 bg-card flex items-center gap-2 shadow-sm text-sm transition-opacity ${item.isCompleted ? 'opacity-40' : ''}`}>
       <Checkbox
-        checked={item.data.isCompleted}
+        checked={item.isCompleted}
         onCheckedChange={handleCheckedChange}
         onClick={(e) => e.stopPropagation()}
       />
       <span className="font-semibold text-muted-foreground truncate">{item.parentTask?.title}</span>
       <span className="text-muted-foreground">/</span>
-      <span className={`font-medium flex-1 truncate ${item.data.isCompleted ? 'line-through' : ''}`}>{item.data?.title}</span>
+      <div className="flex items-center gap-1 flex-1 min-w-0">
+        <span className={`font-medium truncate ${item.isCompleted ? 'line-through' : ''}`}>{item.data?.title}</span>
+        {subtaskDef?.type === 'multi-time' && (
+          <span className={`text-[10px] font-mono shrink-0 ${isExceeded ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
+            ({(subtaskDef as any).completedCount || 0}/{subtaskDef.repeatLimit})
+          </span>
+        )}
+        {subtaskDef?.type === 'daily' && <InfinityIcon className="h-3 w-3 text-blue-400 shrink-0" />}
+      </div>
       <Badge variant={(item.data?.eisenhower?.toLowerCase() || 'q4') as 'q1' | 'q2' | 'q3' | 'q4'} className="text-[10px] ml-auto">
         {item.data?.eisenhower || 'Q4'}
       </Badge>

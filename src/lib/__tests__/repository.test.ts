@@ -87,6 +87,7 @@ describe('repository.tasks', () => {
       refType: 'TASK',
       orderIndex: 0,
       isRollover: false,
+      isCompleted: false,
       updatedAt: new Date().toISOString()
     });
     await db.dailyPlanItems.add({
@@ -96,6 +97,7 @@ describe('repository.tasks', () => {
       refType: 'SUBTASK',
       orderIndex: 1,
       isRollover: false,
+      isCompleted: false,
       updatedAt: new Date().toISOString()
     });
 
@@ -155,6 +157,7 @@ describe('repository.subtasks', () => {
       refType: 'SUBTASK',
       orderIndex: 0,
       isRollover: false,
+      isCompleted: false,
       updatedAt: new Date().toISOString()
     });
 
@@ -224,5 +227,89 @@ describe('repository.subtasks', () => {
     await repository.subtasks.delete(sub2.id);
     updatedTask = await db.tasks.get(task.id);
     expect(updatedTask?.status).toBe('DONE');
+  });
+});
+
+describe('repository.dailyPlan (Recurring)', () => {
+  beforeEach(async () => {
+    await db.categories.clear();
+    await db.tasks.clear();
+    await db.subtasks.clear();
+    await db.dailyPlanItems.clear();
+  });
+
+  it('should sync one-time subtask completion with subtask definition', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Parent Task');
+    const sub = await repository.subtasks.create(task.id, 'One-time Sub', 'one-time');
+    
+    const planItem = await repository.dailyPlan.add('2026-02-12', sub.id, 'SUBTASK', 0);
+    expect(planItem.isCompleted).toBe(false);
+
+    await repository.dailyPlan.toggleCompletion(planItem.id, true);
+    
+    const updatedPlanItem = await db.dailyPlanItems.get(planItem.id);
+    expect(updatedPlanItem?.isCompleted).toBe(true);
+
+    const updatedSub = await db.subtasks.get(sub.id);
+    expect(updatedSub?.isCompleted).toBe(true);
+
+    const updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('DONE');
+  });
+
+  it('should decouple multi-time subtask completion from subtask definition until limit reached', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Parent Task');
+    const sub = await repository.subtasks.create(task.id, 'Multi-time Sub', 'multi-time', 2);
+    
+    const day1Item = await repository.dailyPlan.add('2026-02-12', sub.id, 'SUBTASK', 0);
+    const day2Item = await repository.dailyPlan.add('2026-02-13', sub.id, 'SUBTASK', 0);
+
+    // Complete only one day
+    await repository.dailyPlan.toggleCompletion(day1Item.id, true);
+    
+    const updatedSub = await db.subtasks.get(sub.id);
+    expect(updatedSub?.isCompleted).toBe(false); // Not yet reached limit (2)
+
+    // Complete second day
+    await repository.dailyPlan.toggleCompletion(day2Item.id, true);
+    
+    const fullyUpdatedSub = await db.subtasks.get(sub.id);
+    expect(fullyUpdatedSub?.isCompleted).toBe(true); // Limit reached
+
+    const updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('DONE');
+  });
+
+  it('should handle daily subtask as decoupled instances without overall completion limit', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Parent Task');
+    const sub = await repository.subtasks.create(task.id, 'Daily Sub', 'daily');
+    
+    const day1Item = await repository.dailyPlan.add('2026-02-12', sub.id, 'SUBTASK', 0);
+    await repository.dailyPlan.add('2026-02-13', sub.id, 'SUBTASK', 0);
+
+    await repository.dailyPlan.toggleCompletion(day1Item.id, true);
+    
+    const updatedSub = await db.subtasks.get(sub.id);
+    expect(updatedSub?.isCompleted).toBe(false); // Daily never marks definition as completed automatically
+
+    const updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('TODO');
+  });
+
+  it('should clear repeatLimit when switching to one-time type', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Parent Task');
+    const sub = await repository.subtasks.create(task.id, 'Temp Sub', 'multi-time', 5);
+    
+    expect(sub.repeatLimit).toBe(5);
+
+    await repository.subtasks.update(sub.id, { type: 'one-time' });
+    
+    const updatedSub = await db.subtasks.get(sub.id);
+    expect(updatedSub?.type).toBe('one-time');
+    expect(updatedSub?.repeatLimit).toBeUndefined();
   });
 });

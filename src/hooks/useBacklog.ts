@@ -20,11 +20,24 @@ export const useBacklog = (date: string) => {
     const allTasks = await db.tasks.toArray();
     const allSubTasks = await db.subtasks.toArray();
       
-    // Filter subtasks not in ANY plan and not completed
-    const backlogSubTasks = allSubTasks.filter(s => 
-      !s.isCompleted && 
-      !globalPlanRefIds.has(s.id)
-    );
+    // Filter subtasks not in ANY plan and not completed (unless multi-time/daily)
+    const backlogSubTasks: any[] = [];
+    for (const s of allSubTasks) {
+        // One-time: exclude if completed or scheduled
+        if (s.type === 'one-time' || !s.type) {
+            if (!s.isCompleted && !globalPlanRefIds.has(s.id)) {
+                backlogSubTasks.push({ ...s, completedCount: 0 });
+            }
+        } else {
+            // Multi-time / Daily: Always show in backlog if NOT archived
+            // T016: Include progress for backlog display
+            const completedCount = allPlanItems
+                .filter(item => item.refId === s.id && item.isCompleted)
+                .length;
+            
+            backlogSubTasks.push({ ...s, completedCount });
+        }
+    }
 
     // 4. Group by category
     const groups: BacklogGroup[] = categories.map(cat => {
