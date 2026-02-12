@@ -10,6 +10,9 @@ import {
   DayPicker,
   getDefaultClassNames,
   type DayButton,
+  type MonthGrid as MonthGridType,
+  type Week as WeekType,
+  type Day as DayType,
 } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
@@ -88,7 +91,7 @@ function Calendar({
             : "rounded-md pl-2 pr-1 flex items-center gap-1 text-sm h-8 [&>svg]:text-muted-foreground [&>svg]:size-3.5",
           defaultClassNames.caption_label
         ),
-        table: "w-full border-collapse",
+        month_grid: cn("w-full", defaultClassNames.month_grid),
         weekdays: cn("flex", defaultClassNames.weekdays),
         weekday: cn(
           "text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem] select-none",
@@ -162,14 +165,34 @@ function Calendar({
             <ChevronDownIcon className={cn("size-4", className)} {...props} />
           )
         },
+        // Use div-based layout instead of table elements to fix mobile Safari
+        // height miscalculation with display:flex + aspect-ratio in table cells
+        MonthGrid: ({ className, ...props }: React.ComponentProps<typeof MonthGridType>) => (
+          <div className={cn(className)} {...props} />
+        ),
+        Weekdays: ({ className, ...props }) => (
+          <div className={cn(className)} {...props} />
+        ),
+        Weekday: ({ className, scope: _scope, ...props }) => (
+          <div className={cn(className)} {...props} />
+        ),
+        Weeks: ({ className, ...props }) => (
+          <div className={cn(className)} {...props} />
+        ),
+        Week: ({ className, week: _week, ...props }: React.ComponentProps<typeof WeekType>) => (
+          <div className={cn(className)} {...props} />
+        ),
+        Day: ({ className, day: _day, modifiers: _modifiers, ...props }: React.ComponentProps<typeof DayType>) => (
+          <div className={cn(className)} {...props} />
+        ),
         DayButton: CalendarDayButton,
         WeekNumber: ({ children, ...props }) => {
           return (
-            <td {...props}>
+            <div {...props}>
               <div className="flex size-(--cell-size) items-center justify-center text-center">
                 {children}
               </div>
-            </td>
+            </div>
           )
         },
         ...components,
