@@ -41,6 +41,7 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - TypeScript 5.x, Node.js v24.13.0+ + React 18+, Vite, TailwindCSS 4, Shadcn UI, Dexie.js (IndexedDB) (022-subtask-recurring-types)
 - IndexedDB (via Dexie.js) - Schema v4 Migration (022-subtask-recurring-types)
 - Node.js v24.13.0+, TypeScript 5.9+ + Husky (v9+), lint-staged (001-add-husky-git-hooks)
+- IndexedDB (via Dexie.js) - Schema v4 (from 022) (024-redefine-task-completion)
 
 - TypeScript 5.x, Node.js 20+ (for tooling) + React 18+, Vite, TailwindCSS 4, Shadcn UI, Vites (001-time-allocation-app)
 
@@ -60,9 +61,9 @@ npm test && npm run lint
 TypeScript 5.x, Node.js 20+ (for tooling): Follow standard conventions
 
 ## Recent Changes
+- 024-redefine-task-completion: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB)
 - 001-add-husky-git-hooks: Added Node.js v24.13.0+, TypeScript 5.9+ + Husky (v9+), lint-staged
 - 022-subtask-recurring-types: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Vite, TailwindCSS 4, Shadcn UI, Dexie.js (IndexedDB)
-- 022-subtask-recurring-types: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB)
 
 
 ## ReactJS Principles

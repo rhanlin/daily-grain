@@ -202,15 +202,15 @@ describe('repository.subtasks', () => {
     expect(updatedTask?.status).toBe('TODO');
   });
 
-  it('should prevent manually setting task to DONE if it has incomplete subtasks', async () => {
+  it('should ALLOW manually setting task to DONE even if it has incomplete subtasks (US2)', async () => {
     const cat = await repository.categories.create('Test Cat', '#000');
     const task = await repository.tasks.create(cat.id, 'Parent Task');
     await repository.subtasks.create(task.id, 'Incomplete Sub');
 
-    // T005: Try to manually set task to DONE
+    // US2: Manual override should be allowed
     await repository.tasks.update(task.id, { status: 'DONE' });
     const updatedTask = await db.tasks.get(task.id);
-    expect(updatedTask?.status).toBe('TODO');
+    expect(updatedTask?.status).toBe('DONE');
   });
 
   it('should auto-complete parent task if the only incomplete subtask is deleted', async () => {
@@ -226,6 +226,41 @@ describe('repository.subtasks', () => {
     // T008: Delete the only incomplete subtask (sub2)
     await repository.subtasks.delete(sub2.id);
     updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('DONE');
+  });
+
+  it('should NOT auto-complete parent task if it contains a daily subtask (FR-005)', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Task with Daily');
+    const sub1 = await repository.subtasks.create(task.id, 'One-time Done', 'one-time');
+    await repository.subtasks.create(task.id, 'Daily Item', 'daily');
+
+    await repository.subtasks.update(sub1.id, { isCompleted: true });
+    
+    // Even if one-time is done, daily exists, so status should stay TODO
+    const updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('TODO');
+  });
+
+  it('should sync only one-time subtasks when task is manually set to DONE (FR-006)', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Manual Sync Task');
+    const oneTime = await repository.subtasks.create(task.id, 'One-time', 'one-time');
+    const multiTime = await repository.subtasks.create(task.id, 'Multi-time', 'multi-time', 3);
+    const daily = await repository.subtasks.create(task.id, 'Daily', 'daily');
+
+    // Manually update task status to DONE
+    await repository.tasks.update(task.id, { status: 'DONE' });
+
+    const updatedOneTime = await db.subtasks.get(oneTime.id);
+    const updatedMultiTime = await db.subtasks.get(multiTime.id);
+    const updatedDaily = await db.subtasks.get(daily.id);
+
+    expect(updatedOneTime?.isCompleted).toBe(true);
+    expect(updatedMultiTime?.isCompleted).toBe(false); // Should NOT change
+    expect(updatedDaily?.isCompleted).toBe(false);     // Should NOT change
+    
+    const updatedTask = await db.tasks.get(task.id);
     expect(updatedTask?.status).toBe('DONE');
   });
 });

@@ -3,12 +3,13 @@ import { type Task } from '@/lib/db';
 import { useSubTask } from '@/hooks/useSubTask';
 import { Badge } from '@/components/ui/badge';
 import { SubTaskList } from './SubTaskList';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Collapsible, 
   CollapsibleContent, 
   CollapsibleTrigger 
 } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronRight, Archive, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
+import { ChevronDown, ChevronRight, Archive, Pencil, Trash2, MoreHorizontal, AlertTriangle } from 'lucide-react';
 import { repository } from '@/lib/repository';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default', 
   const [isEditing, setIsEditing] = React.useState(false);
   const [editTitle, setEditTitle] = React.useState(task.title);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isConfirmDoneOpen, setIsConfirmDoneOpen] = React.useState(false);
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
 
   const isDesktop = useMedia("(min-width: 768px)");
@@ -48,6 +50,24 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default', 
   const totalCount = subtasks.length;
 
   const isDone = task.status === 'DONE';
+
+  // Check if there are incomplete recurring subtasks
+  const hasIncompleteRecurring = subtasks.some(s => 
+    (s.type === 'daily') || (s.type === 'multi-time' && !s.isCompleted)
+  );
+
+  const handleToggleDone = async () => {
+    if (!isDone && hasIncompleteRecurring) {
+      setIsConfirmDoneOpen(true);
+      return;
+    }
+    await repository.tasks.update(task.id, { status: isDone ? 'TODO' : 'DONE' });
+  };
+
+  const confirmDone = async () => {
+    await repository.tasks.update(task.id, { status: 'DONE' });
+    setIsConfirmDoneOpen(false);
+  };
 
   const handleArchive = async () => {
     await repository.tasks.update(task.id, { status: 'ARCHIVED' });
@@ -86,6 +106,14 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default', 
         className="border rounded-lg p-3 bg-card shadow-sm transition-opacity group relative active:bg-accent/5 duration-75"
       >
         <div className={`flex items-center gap-3 ${isDone ? 'opacity-50' : ''}`}>
+          <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            <Checkbox 
+              checked={isDone}
+              onCheckedChange={handleToggleDone}
+              className="h-5 w-5"
+            />
+          </div>
+          
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="p-0 h-6 w-6">
               {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -203,6 +231,22 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, viewMode = 'default', 
           </div>
         </DrawerContent>
       </Drawer>
+      <Dialog open={isConfirmDoneOpen} onOpenChange={setIsConfirmDoneOpen}>
+        <DialogContent onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <AlertTriangle className="h-5 w-5" /> 包含未完成的循環子任務
+            </DialogTitle>
+            <DialogDescription>
+              此任務包含尚未達標的多次性或每日任務。手動標記為「完成」將隱藏此任務，但不會更改這些子任務的歷史進度。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsConfirmDoneOpen(false)}>取消</Button>
+            <Button onClick={confirmDone}>確認完成</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

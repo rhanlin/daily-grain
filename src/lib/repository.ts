@@ -76,13 +76,25 @@ export const repository = {
     async update(id: string, updates: Partial<Task>) {
       const updatedAt = new Date().toISOString();
       
-      // Strict enforcement: Don't allow DONE if there are incomplete subtasks
+      // FR-006: Manual DONE Sync
       if (updates.status === 'DONE') {
-        const subtasks = await db.subtasks.where('taskId').equals(id).toArray();
-        const hasIncomplete = subtasks.some(s => !s.isCompleted);
-        if (hasIncomplete) {
-          updates.status = 'TODO';
-          updates.completedAt = undefined;
+        await db.transaction('rw', db.subtasks, async () => {
+          const subtasks = await db.subtasks.where('taskId').equals(id).toArray();
+          const oneTimeIds = subtasks
+            .filter(s => s.type === 'one-time')
+            .map(s => s.id);
+          
+          if (oneTimeIds.length > 0) {
+            await db.subtasks.bulkUpdate(oneTimeIds.map(sid => ({
+              key: sid,
+              changes: { isCompleted: true, updatedAt }
+            })));
+          }
+          // Note: multi-time and daily subtasks are NOT modified to preserve history.
+        });
+        
+        if (!updates.completedAt) {
+          updates.completedAt = updatedAt;
         }
       }
 
@@ -114,25 +126,52 @@ export const repository = {
       const updatedAt = new Date().toISOString();
       const allSubs = await db.subtasks.where('taskId').equals(taskId).toArray();
       
+      // FR-005: If a Task has zero subtasks, auto-completion MUST NOT trigger
       if (allSubs.length === 0) return;
 
-      const allDone = allSubs.every(s => s.isCompleted);
+      // FR-004 & FR-005: If ANY SubTask is "Daily", auto-completion is disabled.
+      const hasDaily = allSubs.some(s => s.type === 'daily');
+      
+      // FR-003: Multi-time SubTask logic
+      // Since completedCount is derived from dailyPlanItems, we need to check if 
+      // each subtask definition is considered "done".
+      // Note: This matches the logic in repository.dailyPlan.toggleCompletion
+      const evalSubTaskDone = async (s: SubTask) => {
+        if (s.type === 'one-time') return s.isCompleted;
+        if (s.type === 'multi-time') {
+          const completedCount = await db.dailyPlanItems
+            .where('refId').equals(s.id)
+            .filter(i => i.isCompleted)
+            .count();
+          return s.repeatLimit ? completedCount >= s.repeatLimit : true;
+        }
+        return false; // Daily is never "done" for the sake of auto-parent-completion
+      };
+
+      const results = await Promise.all(allSubs.map(evalSubTaskDone));
+      const allDone = results.every(r => r === true);
       const parentTask = await db.tasks.get(taskId);
 
       if (!parentTask || parentTask.status === 'ARCHIVED') return;
 
-      if (allDone) {
+      // Logic: Only auto-complete if NO daily exists AND ALL others are done.
+      if (!hasDaily && allDone) {
         await db.tasks.update(taskId, { 
           status: 'DONE', 
           updatedAt,
           completedAt: updatedAt 
         });
       } else {
-        await db.tasks.update(taskId, { 
-          status: 'TODO', 
-          updatedAt,
-          completedAt: undefined 
-        });
+        // FR-007: Dynamic Reversion - If any subtask is unchecked or added, revert to TODO
+        // But only if it was NOT manually set (this is tricky, but for MVP we follow the spec FR-007)
+        // If it's already TODO, we don't need to do anything.
+        if (parentTask.status === 'DONE') {
+            await db.tasks.update(taskId, { 
+                status: 'TODO', 
+                updatedAt,
+                completedAt: undefined 
+            });
+        }
       }
     },
     async getByTask(taskId: string) {
@@ -239,11 +278,11 @@ export const repository = {
         // If it's a subtask, check if we need to sync with SubTask definition
         if (item.refType === 'SUBTASK') {
           const subtask = await db.subtasks.get(item.refId);
-          if (subtask && subtask.type === 'one-time') {
-            // One-time: Sync with SubTask definition
-            await db.subtasks.update(subtask.id, { isCompleted, updatedAt });
-            await repository.subtasks.syncParentTaskStatus(subtask.taskId);
-          } else if (subtask && subtask.type === 'multi-time') {
+          if (subtask) {
+            if (subtask.type === 'one-time') {
+              // One-time: Sync with SubTask definition
+              await db.subtasks.update(subtask.id, { isCompleted, updatedAt });
+            } else if (subtask.type === 'multi-time') {
               // Multi-time: Check if all instances are done to mark SubTask definition as completed
               const completedCount = await db.dailyPlanItems
                 .where('refId').equals(subtask.id)
@@ -252,7 +291,9 @@ export const repository = {
               
               const isFullyDone = subtask.repeatLimit ? completedCount >= subtask.repeatLimit : true;
               await db.subtasks.update(subtask.id, { isCompleted: isFullyDone, updatedAt });
-              await repository.subtasks.syncParentTaskStatus(subtask.taskId);
+            }
+            // All types (including daily) should trigger sync to handle dynamic reversion (FR-007)
+            await repository.subtasks.syncParentTaskStatus(subtask.taskId);
           }
         } else if (item.refType === 'TASK') {
             // Task: Sync with Task definition status
