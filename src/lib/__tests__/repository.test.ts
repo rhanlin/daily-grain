@@ -168,4 +168,61 @@ describe('repository.subtasks', () => {
     const dailyPlanItems = await db.dailyPlanItems.toArray();
     expect(dailyPlanItems).toHaveLength(0);
   });
+
+  it('should auto-complete parent task when all subtasks are done', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Parent Task');
+    const sub1 = await repository.subtasks.create(task.id, 'Sub 1');
+    const sub2 = await repository.subtasks.create(task.id, 'Sub 2');
+
+    await repository.subtasks.update(sub1.id, { isCompleted: true });
+    let updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('TODO');
+
+    await repository.subtasks.update(sub2.id, { isCompleted: true });
+    updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('DONE');
+  });
+
+  it('should revert parent task to TODO when a new incomplete subtask is added to a DONE task', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Parent Task');
+    const sub1 = await repository.subtasks.create(task.id, 'Sub 1');
+    await repository.subtasks.update(sub1.id, { isCompleted: true });
+
+    let updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('DONE');
+
+    // T004: Adding a new subtask (default incomplete) should revert task to TODO
+    await repository.subtasks.create(task.id, 'Sub 2');
+    updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('TODO');
+  });
+
+  it('should prevent manually setting task to DONE if it has incomplete subtasks', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Parent Task');
+    await repository.subtasks.create(task.id, 'Incomplete Sub');
+
+    // T005: Try to manually set task to DONE
+    await repository.tasks.update(task.id, { status: 'DONE' });
+    const updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('TODO');
+  });
+
+  it('should auto-complete parent task if the only incomplete subtask is deleted', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Parent Task');
+    const sub1 = await repository.subtasks.create(task.id, 'Sub 1');
+    const sub2 = await repository.subtasks.create(task.id, 'Sub 2');
+
+    await repository.subtasks.update(sub1.id, { isCompleted: true });
+    let updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('TODO');
+
+    // T008: Delete the only incomplete subtask (sub2)
+    await repository.subtasks.delete(sub2.id);
+    updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('DONE');
+  });
 });

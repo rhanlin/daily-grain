@@ -75,9 +75,18 @@ export const repository = {
     },
     async update(id: string, updates: Partial<Task>) {
       const updatedAt = new Date().toISOString();
-      await db.tasks.update(id, { ...updates, updatedAt });
       
-      // Auto-complete check logic could be triggered here or via a dedicated hook
+      // Strict enforcement: Don't allow DONE if there are incomplete subtasks
+      if (updates.status === 'DONE') {
+        const subtasks = await db.subtasks.where('taskId').equals(id).toArray();
+        const hasIncomplete = subtasks.some(s => !s.isCompleted);
+        if (hasIncomplete) {
+          updates.status = 'TODO';
+          updates.completedAt = undefined;
+        }
+      }
+
+      await db.tasks.update(id, { ...updates, updatedAt });
     },
     async delete(id: string) {
       await db.transaction('rw', db.tasks, db.subtasks, db.dailyPlanItems, async () => {
@@ -101,6 +110,31 @@ export const repository = {
     }
   },
   subtasks: {
+    async syncParentTaskStatus(taskId: string) {
+      const updatedAt = new Date().toISOString();
+      const allSubs = await db.subtasks.where('taskId').equals(taskId).toArray();
+      
+      if (allSubs.length === 0) return;
+
+      const allDone = allSubs.every(s => s.isCompleted);
+      const parentTask = await db.tasks.get(taskId);
+
+      if (!parentTask || parentTask.status === 'ARCHIVED') return;
+
+      if (allDone) {
+        await db.tasks.update(taskId, { 
+          status: 'DONE', 
+          updatedAt,
+          completedAt: updatedAt 
+        });
+      } else {
+        await db.tasks.update(taskId, { 
+          status: 'TODO', 
+          updatedAt,
+          completedAt: undefined 
+        });
+      }
+    },
     async getByTask(taskId: string) {
       return await db.subtasks.where('taskId').equals(taskId).toArray();
     },
@@ -121,6 +155,7 @@ export const repository = {
         updatedAt: now
       };
       await db.subtasks.add(subtask);
+      await this.syncParentTaskStatus(taskId);
       return subtask;
     },
     async update(id: string, updates: Partial<SubTask>) {
@@ -130,29 +165,20 @@ export const repository = {
       // Auto-complete parent task
       const subtask = await db.subtasks.get(id);
       if (subtask) {
-        const taskId = subtask.taskId;
-        const allSubs = await db.subtasks.where('taskId').equals(taskId).toArray();
-        const allDone = allSubs.every(s => s.isCompleted);
-        if (allDone && allSubs.length > 0) {
-          await db.tasks.update(taskId, { 
-            status: 'DONE', 
-            updatedAt,
-            completedAt: updatedAt 
-          });
-        } else {
-          await db.tasks.update(taskId, { 
-            status: 'TODO', 
-            updatedAt,
-            completedAt: undefined 
-          });
-        }
+        await this.syncParentTaskStatus(subtask.taskId);
       }
     },
     async delete(id: string) {
-      await db.transaction('rw', db.subtasks, db.dailyPlanItems, async () => {
+      const subtask = await db.subtasks.get(id);
+      if (!subtask) return;
+
+      await db.transaction('rw', db.tasks, db.subtasks, db.dailyPlanItems, async () => {
         await db.subtasks.delete(id);
         // Remove from Daily Plan
         await db.dailyPlanItems.where('refId').equals(id).delete();
+        
+        // Sync parent status
+        await this.syncParentTaskStatus(subtask.taskId);
       });
     }
   },

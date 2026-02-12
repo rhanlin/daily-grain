@@ -13,15 +13,6 @@ export const useSubTask = (taskId: string) => {
 
   const updateSubTask = async (id: string, updates: any) => {
     await repository.subtasks.update(id, updates);
-    
-    // Check for auto-completion of parent task
-    const allSubs = await repository.subtasks.getByTask(taskId);
-    const allDone = allSubs.every(s => s.isCompleted);
-    if (allDone && allSubs.length > 0) {
-      await repository.tasks.update(taskId, { status: 'DONE', completedAt: new Date().toISOString() });
-    } else {
-      await repository.tasks.update(taskId, { status: 'TODO', completedAt: undefined });
-    }
   };
 
   return {
