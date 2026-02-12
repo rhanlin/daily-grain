@@ -72,7 +72,7 @@ export const DailyPlanDateSelector: React.FC<DailyPlanDateSelectorProps> = ({
         {Trigger}
       </DrawerTrigger>
       <DrawerContent>
-        <div className="flex justify-center pb-safe">
+        <div className="flex justify-center overflow-y-auto">
           <Calendar
             mode="single"
             selected={date}
