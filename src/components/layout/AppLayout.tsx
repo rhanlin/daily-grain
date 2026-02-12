@@ -16,7 +16,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="bg-background text-foreground flex flex-col">
       <header className="border-b px-4 py-3 flex justify-between items-center bg-card sticky top-0 z-50">
         <h1 className="text-xl font-bold tracking-tight">🌾 DailyGrain</h1>
 
@@ -39,7 +39,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
+      <main className="flex-1 flex overflow-hidden">
         {/* Navigation Sidebar for larger screens */}
         <aside className="w-64 border-r hidden md:flex flex-col p-4 gap-2">
           {navItems.map((item) => (
@@ -56,10 +56,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto px-4 sm:pl-4 sm:pr-0 md:pl-6">
+        <div className="flex-1 overflow-y-auto px-4 sm:pl-4 sm:pr-0 md:pl-6">
           {children}
-        </main>
-      </div>
+        </div>
+      </main>
 
       {/* Bottom Navigation for mobile */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-card flex justify-around p-2 z-50">
