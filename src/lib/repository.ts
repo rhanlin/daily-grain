@@ -129,14 +129,14 @@ export const repository = {
       // FR-005: If a Task has zero subtasks, auto-completion MUST NOT trigger
       if (allSubs.length === 0) return;
 
-      // FR-004 & FR-005: If ANY SubTask is "Daily", auto-completion is disabled.
-      const hasDaily = allSubs.some(s => s.type === 'daily');
+      // FR-004 & FR-005: Only INCOMPLETE Daily SubTasks disable auto-completion.
+      const hasIncompleteDaily = allSubs.some(s => s.type === 'daily' && !s.isCompleted);
       
       // FR-003: Multi-time SubTask logic
-      // Since completedCount is derived from dailyPlanItems, we need to check if 
-      // each subtask definition is considered "done".
-      // Note: This matches the logic in repository.dailyPlan.toggleCompletion
+      // Considered "done" if isCompleted is manually true OR completedCount >= repeatLimit
       const evalSubTaskDone = async (s: SubTask) => {
+        if (s.isCompleted) return true; // Manual override (Applies to all types including Daily/Multi-time)
+        
         if (s.type === 'one-time') return s.isCompleted;
         if (s.type === 'multi-time') {
           const completedCount = await db.dailyPlanItems
@@ -145,7 +145,7 @@ export const repository = {
             .count();
           return s.repeatLimit ? completedCount >= s.repeatLimit : true;
         }
-        return false; // Daily is never "done" for the sake of auto-parent-completion
+        return false; // Incomplete Daily is never "done" for the sake of auto-parent-completion
       };
 
       const results = await Promise.all(allSubs.map(evalSubTaskDone));
@@ -154,8 +154,8 @@ export const repository = {
 
       if (!parentTask || parentTask.status === 'ARCHIVED') return;
 
-      // Logic: Only auto-complete if NO daily exists AND ALL others are done.
-      if (!hasDaily && allDone) {
+      // Logic: Only auto-complete if NO incomplete daily exists AND ALL others are done.
+      if (!hasIncompleteDaily && allDone) {
         await db.tasks.update(taskId, { 
           status: 'DONE', 
           updatedAt,
@@ -163,8 +163,6 @@ export const repository = {
         });
       } else {
         // FR-007: Dynamic Reversion - If any subtask is unchecked or added, revert to TODO
-        // But only if it was NOT manually set (this is tricky, but for MVP we follow the spec FR-007)
-        // If it's already TODO, we don't need to do anything.
         if (parentTask.status === 'DONE') {
             await db.tasks.update(taskId, { 
                 status: 'TODO', 

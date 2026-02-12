@@ -1,33 +1,30 @@
-# UI Action Contracts: Task Status Redefinition
+# UI Action Contracts
 
-## Task Actions
+## 1. Task Actions
 
-### `repository.tasks.update(id, updates)`
-- **Updated Logic**:
-    - If `updates.status === 'DONE'`:
-        - Apply manual sync rule: Mark all `one-time` subtasks as `isCompleted = true`.
-        - Do NOT prevent completion if `multi-time` or `daily` items exist (Manual Override).
-    - If `updates.status === 'TODO'`:
-        - Revert status but preserve subtask progress history.
+### Update Task Status
+- **Action**: User toggles Task completion checkbox.
+- **Logic**:
+  - `status`: 'TODO' <-> 'DONE'.
+  - `updatedAt`: Now.
+  - `completedAt`: Now (if DONE) / Undefined (if TODO).
+  - **Side Effect**: Update `one-time` subtasks ONLY.
 
-## SubTask Actions (Triggering Status Engine)
+### Update SubTask Definition
+- **Action**: User toggles SubTask completion checkbox (in Task Management).
+- **Logic**:
+  - `isCompleted`: true <-> false.
+  - `updatedAt`: Now.
+  - **Side Effect**: Trigger Task status re-evaluation immediately.
 
-### `repository.subtasks.syncParentTaskStatus(taskId)`
-- **Redefined Engine Logic**:
-    ```typescript
-    const subs = await getSubTasksByTask(taskId);
-    const hasDaily = subs.some(s => s.type === 'daily');
-    
-    const allDone = subs.every(s => {
-        if (s.type === 'multi-time') {
-            return s.completedCount >= (s.repeatLimit || 1);
-        }
-        return s.isCompleted;
-    });
+## 2. Daily Plan Actions
 
-    if (!hasDaily && allDone) {
-        await updateTask(taskId, { status: 'DONE' });
-    } else {
-        await updateTask(taskId, { status: 'TODO' });
-    }
-    ```
+### Toggle Item Completion
+- **Action**: User checks Daily Plan item.
+- **Logic**:
+  - `isCompleted`: true <-> false.
+  - **Side Effect**: 
+    - `one-time`: Sync definition `isCompleted`.
+    - `multi-time`: Update virtual `completedCount`, re-evaluate definition `isCompleted`.
+    - `daily`: Update instance `isCompleted`.
+    - **Global**: Trigger Task status re-evaluation.

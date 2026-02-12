@@ -1,10 +1,10 @@
 # Implementation Plan: Redefine Task Completion Logic
 
-**Branch**: `024-redefine-task-completion` | **Date**: 2026-02-12 | **Spec**: [spec.md](./spec.md)
+**Branch**: `024-redefine-task-completion` | **Date**: 2026-02-13 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/024-redefine-task-completion/spec.md`
 
 ## Summary
-本計畫旨在重新定義任務 (Task) 的「完成」邏輯，以適配 022 引入的多次性與每日子任務。核心方案是建立一個反應式的「狀態計算引擎」，根據子任務類型與累積完成度自動推導父任務狀態。技術實作將集中於 `repository.ts`，並確保手動覆寫操作能正確處理資料同步（僅同步一次性任務）與歷史進度保留（保留循環任務進度）。
+本計畫旨在重新定義任務 (Task) 的「完成」邏輯，以適配 022 引入的多次性與每日子任務。核心方案是建立一個反應式的「狀態計算引擎」，根據子任務類型與累積完成度自動推導父任務狀態。技術實作將集中於 `repository.ts`，並確保手動覆寫操作（Manual Override）具有最高優先級，特別是針對循環任務（Daily/Multi-time）的結案處理。
 
 ## Technical Context
 
@@ -21,12 +21,12 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-1. **高品質與可測試性**: ✅ 計畫包含對 Status Engine 的邊界案例測試。
-2. **使用者體驗一致性**: ✅ 自動化狀態管理降低用戶負擔，並提供預期內的手動覆寫行為。
+1. **高品質與可測試性**: ✅ 計畫包含對 Status Engine 的邊界案例測試，特別是手動覆寫與自動計算的衝突場景。
+2. **使用者體驗一致性**: ✅ 採用「手動優先」原則，解決使用者對循環任務結案的困惑。
 3. **效能優先**: ✅ 計算邏輯侷限於受影響的 Task 範圍，不進行全表掃描。
 4. **MVP 與避免過度設計**: ✅ 直接利用現有的 repository 勾子觸發，不引入額外的背景 Worker。
 5. **全面正體中文**: ✅ 文件與代碼註解維持正體中文。
-6. **圖像化與可視化溝通**: ✅ 在 `research.md` 中以流程圖描述狀態轉換邏輯。
+6. **圖像化與可視化溝通**: ✅ 在 `spec.md` 與 `research.md` 中以流程圖描述狀態轉換邏輯。
 
 ## Project Structure
 

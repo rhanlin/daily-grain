@@ -242,6 +242,36 @@ describe('repository.subtasks', () => {
     expect(updatedTask?.status).toBe('TODO');
   });
 
+  it('should auto-complete parent task if a daily subtask is manually marked as done (Clarification 2026-02-13)', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Task with Daily');
+    const sub1 = await repository.subtasks.create(task.id, 'One-time Done', 'one-time');
+    const daily = await repository.subtasks.create(task.id, 'Daily Item', 'daily');
+
+    await repository.subtasks.update(sub1.id, { isCompleted: true });
+    let updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('TODO'); // Still TODO because daily is incomplete
+
+    // Manually mark daily subtask definition as done
+    await repository.subtasks.update(daily.id, { isCompleted: true });
+    updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('DONE'); // Now DONE because daily is manually completed
+  });
+
+  it('should auto-complete parent task if a multi-time subtask is manually marked as done (Clarification 2026-02-13)', async () => {
+    const cat = await repository.categories.create('Test Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Task with Multi');
+    const multi = await repository.subtasks.create(task.id, 'Multi Item', 'multi-time', 10);
+
+    let updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('TODO');
+
+    // Manually mark multi-time subtask definition as done (even with 0 progress)
+    await repository.subtasks.update(multi.id, { isCompleted: true });
+    updatedTask = await db.tasks.get(task.id);
+    expect(updatedTask?.status).toBe('DONE');
+  });
+
   it('should sync only one-time subtasks when task is manually set to DONE (FR-006)', async () => {
     const cat = await repository.categories.create('Test Cat', '#000');
     const task = await repository.tasks.create(cat.id, 'Manual Sync Task');
