@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { repository } from '../repository';
+import { repository, subtaskComparator } from '../repository';
 import { db } from '../db';
 
 describe('repository.categories', () => {
@@ -376,5 +376,41 @@ describe('repository.dailyPlan (Recurring)', () => {
     const updatedSub = await db.subtasks.get(sub.id);
     expect(updatedSub?.type).toBe('one-time');
     expect(updatedSub?.repeatLimit).toBeUndefined();
+  });
+});
+
+describe('subtaskComparator', () => {
+  const baseSub = {
+    id: 'id1',
+    taskId: 'task1',
+    title: 'Sub 1',
+    isCompleted: false,
+    type: 'one-time' as const,
+    eisenhower: 'Q4' as const,
+    createdAt: '2026-03-19T10:00:00Z',
+    updatedAt: '2026-03-19T10:00:00Z'
+  };
+
+  it('should sort by createdAt ascending', () => {
+    const s1 = { ...baseSub, id: 'a', createdAt: '2026-03-19T10:00:00Z' };
+    const s2 = { ...baseSub, id: 'b', createdAt: '2026-03-19T11:00:00Z' };
+    
+    expect(subtaskComparator(s1, s2)).toBeLessThan(0);
+    expect(subtaskComparator(s2, s1)).toBeGreaterThan(0);
+  });
+
+  it('should fallback to updatedAt if createdAt is missing', () => {
+    const s1 = { ...baseSub, id: 'a', createdAt: '', updatedAt: '2026-03-19T10:00:00Z' };
+    const s2 = { ...baseSub, id: 'b', createdAt: '', updatedAt: '2026-03-19T11:00:00Z' };
+    
+    expect(subtaskComparator(s1, s2)).toBeLessThan(0);
+  });
+
+  it('should use id as tie-breaker if times are equal', () => {
+    const s1 = { ...baseSub, id: 'a', createdAt: '2026-03-19T10:00:00Z' };
+    const s2 = { ...baseSub, id: 'b', createdAt: '2026-03-19T10:00:00Z' };
+    
+    expect(subtaskComparator(s1, s2)).toBeLessThan(0);
+    expect(subtaskComparator(s2, s1)).toBeGreaterThan(0);
   });
 });

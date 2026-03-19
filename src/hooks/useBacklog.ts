@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Category, type Task, type SubTask } from '@/lib/db';
+import { subtaskComparator } from '@/lib/repository';
 
 export interface BacklogGroup {
   category: Category;
@@ -19,9 +20,10 @@ export const useBacklog = (date: string) => {
     // 3. Fetch all tasks and subtasks
     const allTasks = await db.tasks.toArray();
     const allSubTasks = await db.subtasks.toArray();
+    allSubTasks.sort(subtaskComparator);
       
     // Filter subtasks not in ANY plan and not completed (unless multi-time/daily)
-    const backlogSubTasks: any[] = [];
+    const backlogSubTasks: (SubTask & { completedCount: number })[] = [];
     for (const s of allSubTasks) {
         // One-time: exclude if completed or scheduled
         if (s.type === 'one-time' || !s.type) {
@@ -45,9 +47,20 @@ export const useBacklog = (date: string) => {
       const catTasks = allTasks.filter(t => t.categoryId === cat.id && t.status === 'TODO');
       
       // Find subtasks belonging to this category's tasks that are in the backlog
+      // Since allSubTasks was pre-sorted, this sub-set will also be chronologically ordered.
       const catSubTasks = backlogSubTasks.filter(s => {
         const parentTask = allTasks.find(t => t.id === s.taskId);
         return parentTask?.categoryId === cat.id && parentTask?.status !== 'ARCHIVED';
+      });
+
+      // FR-003: Group by taskId within each category
+      // We sort the filtered catSubTasks to ensure they are grouped by taskId
+      // while preserving their internal chronological order.
+      catSubTasks.sort((a, b) => {
+        if (a.taskId !== b.taskId) {
+            return a.taskId.localeCompare(b.taskId);
+        }
+        return subtaskComparator(a, b);
       });
 
       // FR-003 & FR-004: Only include parent Tasks that have at least one visible subtask

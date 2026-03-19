@@ -61,9 +61,9 @@ npm test && npm run lint
 TypeScript 5.x, Node.js 20+ (for tooling): Follow standard conventions
 
 ## Recent Changes
+- 025-subtask-ordering: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB)
 - 024-redefine-task-completion: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB)
 - 024-redefine-task-completion: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB)
-- 001-add-husky-git-hooks: Added Node.js v24.13.0+, TypeScript 5.9+ + Husky (v9+), lint-staged
 
 
 ## ReactJS Principles

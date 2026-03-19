@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
+import { subtaskComparator } from '@/lib/repository';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -18,6 +19,8 @@ export const EisenhowerMatrix: React.FC = () => {
   const allItems = useLiveQuery(async () => {
     const tasks = await db.tasks.where('status').anyOf('TODO', 'DONE').toArray();
     const subtasks = await db.subtasks.toArray();
+    subtasks.sort(subtaskComparator);
+    
     const categories = await db.categories.toArray();
     const catMap = new Map(categories.map(c => [c.id, c.color]));
     

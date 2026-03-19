@@ -1,6 +1,18 @@
 import { db, type Category, type Task, type SubTask, type DailyPlanItem, type SubTaskType } from './db';
 import { v4 as uuidv4 } from 'uuid';
 
+export const subtaskComparator = (a: SubTask, b: SubTask) => {
+  const timeA = a.createdAt || a.updatedAt || '';
+  const timeB = b.createdAt || b.updatedAt || '';
+  
+  if (timeA !== timeB) {
+    return timeA.localeCompare(timeB);
+  }
+  
+  // Tie-breaker
+  return a.id.localeCompare(b.id);
+};
+
 export const repository = {
   categories: {
     async getAll() {
@@ -124,7 +136,9 @@ export const repository = {
   subtasks: {
     async syncParentTaskStatus(taskId: string) {
       const updatedAt = new Date().toISOString();
+      // Ensure we fetch subtasks in a consistent order during sync using the robust comparator
       const allSubs = await db.subtasks.where('taskId').equals(taskId).toArray();
+      allSubs.sort(subtaskComparator);
       
       // FR-005: If a Task has zero subtasks, auto-completion MUST NOT trigger
       if (allSubs.length === 0) return;
@@ -173,7 +187,9 @@ export const repository = {
       }
     },
     async getByTask(taskId: string) {
-      return await db.subtasks.where('taskId').equals(taskId).toArray();
+      const allSubs = await db.subtasks.where('taskId').equals(taskId).toArray();
+      allSubs.sort(subtaskComparator);
+      return allSubs;
     },
     async create(taskId: string, title: string, type: SubTaskType = 'one-time', repeatLimit?: number) {
       const now = new Date().toISOString();
