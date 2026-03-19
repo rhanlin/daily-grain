@@ -42,6 +42,7 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - IndexedDB (via Dexie.js) - Schema v4 Migration (022-subtask-recurring-types)
 - Node.js v24.13.0+, TypeScript 5.9+ + Husky (v9+), lint-staged (001-add-husky-git-hooks)
 - IndexedDB (via Dexie.js) - Schema v4 (from 022) (024-redefine-task-completion)
+- TypeScript 5.x, Node.js v24.13.0+ + React 18+, embla-carousel-react, framer-motion, lucide-reac (026-backlog-swipe-optimization)
 
 - TypeScript 5.x, Node.js 20+ (for tooling) + React 18+, Vite, TailwindCSS 4, Shadcn UI, Vites (001-time-allocation-app)
 
@@ -58,11 +59,12 @@ npm test && npm run lint
 
 ## Code Style
 
-TypeScript 5.x, Node.js 20+ (for tooling): Follow standard conventions
+TypeScript 5.x, Node.js 20+ (for tooling): Follow standard conventions. 
+- **Strict Typing**: 每次實作完畢後的驗證環節，**必須**主動排查並消除代碼中的 `any` 型別。除非第三方庫限制，否則禁止引入新的 `any`。
 
 ## Recent Changes
+- 026-backlog-swipe-optimization: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, embla-carousel-react, framer-motion, lucide-reac
 - 025-subtask-ordering: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB)
-- 024-redefine-task-completion: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB)
 - 024-redefine-task-completion: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB)
 
 

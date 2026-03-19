@@ -1,15 +1,16 @@
 import React from 'react';
-import { useBacklog } from '@/hooks/useBacklog';
+import { useBacklog, type BacklogGroup } from '@/hooks/useBacklog';
 import { CategorySlide } from './CategorySlide';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  type CarouselApi,
 } from '@/components/ui/carousel';
 
-import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { motion, useTransform, useMotionValue, type MotionValue } from 'framer-motion';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useDailyPlan } from '@/hooks/useDailyPlan';
 import { toast } from 'sonner';
@@ -23,6 +24,14 @@ interface BacklogContentProps {
   activeIndex: number;
   onActiveIndexChange: (index: number) => void;
   onClose?: () => void;
+}
+
+interface SelectionProps {
+  isSelectionMode: boolean;
+  selectedIds: Set<string>;
+  activeCategoryId: string | null;
+  onToggleSelection: (subTaskId: string, categoryId: string) => void;
+  onStartSelection: (subTaskId: string, categoryId: string) => void;
 }
 
 export const BacklogContent: React.FC<BacklogContentProps> = ({
@@ -41,6 +50,10 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
   // FR-002: Multi-select state (Category Scope)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+  
+  // Custom progress tracking for 1:1 animation
+  const scrollProgress = useMotionValue(0);
+  const apiRef = useRef<CarouselApi>(null);
 
   const resetSelection = () => {
     setSelectedIds(new Set());
@@ -108,7 +121,7 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
     );
   }
 
-  const selectionProps = {
+  const selectionProps: SelectionProps = {
     isSelectionMode: selectedIds.size > 0,
     selectedIds,
     activeCategoryId,
@@ -159,27 +172,35 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
       </div>
       
       <Carousel 
-        className="w-full flex-1" 
+        className="w-full flex-1 touch-pan-y" 
         opts={{
           align: 'center',
           startIndex: activeIndex === 0 && groups.length > 0 ? 1 : activeIndex,
-          duration: 25, // 稍微調快動畫速度增加物理感
+          duration: 35, // Adjust slightly for better physics feel
+          dragFree: false,
+          containScroll: 'trimSnaps'
         }}
         setApi={(api) => {
           if (!api) return;
+          apiRef.current = api;
           
+          api.on('scroll', () => {
+            scrollProgress.set(api.scrollProgress());
+          });
+
           api.on('select', () => {
             const current = api.selectedScrollSnap();
-            // FR-005: 如果滑入索引 0 (Placeholder)，自動彈回索引 1
+            // FR-005: If scrolled to Placeholder, snap to 1
             if (current === 0) {
-              // 使用彈簧感的回彈
               setTimeout(() => api.scrollTo(1), 10);
             } else {
               onActiveIndexChange(current);
+              // US2: Haptic feedback on snap
+              if ('vibrate' in navigator) navigator.vibrate(10);
             }
           });
 
-          // 初始化時確保不在 0
+          // Initialization check
           if (api.selectedScrollSnap() === 0 && groups.length > 0) {
             api.scrollTo(1, true);
           }
@@ -190,29 +211,17 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
           <CarouselItem className="h-full basis-4/5 pointer-events-none opacity-0 select-none" aria-hidden="true" />
           
           {groups.map((group, idx) => (
-            <CarouselItem key={group.category.id} className="h-full p-4 basis-4/5">
-              <motion.div
-                initial={false}
-                animate={{
-                  scale: activeIndex === idx + 1 ? 1 : 0.95,
-                  opacity: activeIndex === idx + 1 ? 1 : 0.6
-                }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="h-full"
-              >
-                <ScrollArea className="h-[calc(75vh-120px)]">
-                  <CategorySlide
-                    category={group.category}
-                    tasks={group.tasks}
-                    subtasks={group.subtasks}
-                    scheduledMap={scheduledMap}
-                    isDesktop={isDesktop}
-                    onItemTap={onItemTap}
-                    {...selectionProps}
-                  />
-                </ScrollArea>
-              </motion.div>
-            </CarouselItem>
+            <AnimatedCarouselItem
+              key={group.category.id}
+              group={group}
+              index={idx + 1}
+              totalGroups={groups.length}
+              scrollProgress={scrollProgress}
+              scheduledMap={scheduledMap}
+              isDesktop={isDesktop}
+              onItemTap={onItemTap}
+              selectionProps={selectionProps}
+            />
           ))}
         </CarouselContent>
       </Carousel>
@@ -227,5 +236,57 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
         </div>
       )}
     </div>
+  );
+};
+
+interface AnimatedCarouselItemProps {
+  group: BacklogGroup;
+  index: number;
+  totalGroups: number;
+  scrollProgress: MotionValue<number>;
+  scheduledMap: Map<string, string>;
+  isDesktop: boolean;
+  onItemTap: (refId: string, refType: 'TASK' | 'SUBTASK') => void;
+  selectionProps: SelectionProps;
+}
+
+const AnimatedCarouselItem: React.FC<AnimatedCarouselItemProps> = ({
+  group,
+  index,
+  totalGroups,
+  scrollProgress,
+  scheduledMap,
+  isDesktop,
+  onItemTap,
+  selectionProps
+}) => {
+  const inputRange = [
+    (index - 1) / Math.max(1, totalGroups), 
+    index / Math.max(1, totalGroups), 
+    (index + 1) / Math.max(1, totalGroups)
+  ];
+  
+  const scale = useTransform(scrollProgress, inputRange, [0.9, 1, 0.9]);
+  const opacity = useTransform(scrollProgress, inputRange, [0.6, 1, 0.6]);
+
+  return (
+    <CarouselItem className="h-full p-4 basis-4/5 touch-pan-y">
+      <motion.div
+        style={{ scale, opacity }}
+        className="h-full"
+      >
+        <ScrollArea className="h-[calc(75vh-120px)] touch-pan-y">
+          <CategorySlide
+            category={group.category}
+            tasks={group.tasks}
+            subtasks={group.subtasks}
+            scheduledMap={scheduledMap}
+            isDesktop={isDesktop}
+            onItemTap={onItemTap}
+            {...selectionProps}
+          />
+        </ScrollArea>
+      </motion.div>
+    </CarouselItem>
   );
 };

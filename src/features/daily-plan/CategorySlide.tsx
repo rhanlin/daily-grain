@@ -8,10 +8,20 @@ import { useLongPress } from 'react-use';
 
 import { Checkbox } from '@/components/ui/checkbox';
 
+interface BacklogSubTask extends SubTask {
+  completedCount?: number;
+}
+
+interface DraggableData {
+  type: 'BACKLOG_ITEM';
+  refId: string;
+  refType: 'TASK' | 'SUBTASK';
+}
+
 interface CategorySlideProps {
   category: Category;
   tasks: Task[];
-  subtasks: SubTask[];
+  subtasks: BacklogSubTask[];
   scheduledMap: Map<string, string>;
   isDesktop: boolean;
   onItemTap: (refId: string, refType: 'TASK' | 'SUBTASK') => void;
@@ -23,7 +33,7 @@ interface CategorySlideProps {
   onStartSelection?: (subTaskId: string, categoryId: string) => void;
 }
 
-export const CategorySlide: React.FC<CategorySlideProps> = ({
+export const CategorySlide = React.memo(({
   category,
   tasks,
   subtasks,
@@ -35,7 +45,7 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
   activeCategoryId = null,
   onToggleSelection,
   onStartSelection,
-}) => {
+}: CategorySlideProps) => {
   // FR-003: Lock slides from different categories
   const isLocked = isSelectionMode && activeCategoryId !== category.id;
 
@@ -96,8 +106,8 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
                     <div className="flex items-center gap-1 flex-1 min-w-0">
                       <span className='truncate'>{sub.title}</span>
                       {sub.type === 'multi-time' && (
-                        <span className={`text-[10px] font-mono shrink-0 ${(sub as any).completedCount > (sub.repeatLimit || 0) ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
-                          ({(sub as any).completedCount || 0}/{sub.repeatLimit})
+                        <span className={`text-[10px] font-mono shrink-0 ${(sub.completedCount || 0) > (sub.repeatLimit || 0) ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
+                          ({sub.completedCount || 0}/{sub.repeatLimit})
                         </span>
                       )}
                       {sub.type === 'daily' && <InfinityIcon className="h-3 w-3 text-blue-400 shrink-0" />}
@@ -116,7 +126,7 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
                         </Tooltip>
                       </TooltipProvider>
                     )}
-                    <Badge variant={(sub.eisenhower?.toLowerCase() || 'q4') as any} className="text-[8px] px-1 py-0 h-4">
+                    <Badge variant={(sub.eisenhower?.toLowerCase() || 'q4') as 'q1' | 'q2' | 'q3' | 'q4'} className="text-[8px] px-1 py-0 h-4">
                       {sub.eisenhower || 'Q4'}
                     </Badge>
                   </div>
@@ -128,7 +138,7 @@ export const CategorySlide: React.FC<CategorySlideProps> = ({
       </div>
     </div>
   );
-};
+});
 
 const BacklogTaskItem = ({ 
   task, 
@@ -143,7 +153,7 @@ const BacklogTaskItem = ({
   categoryId
 }: { 
   task: Task, 
-  subtasks: SubTask[],
+  subtasks: BacklogSubTask[],
   scheduledMap: Map<string, string>, 
   isDesktop: boolean, 
   onItemTap: (refId: string, refType: 'TASK' | 'SUBTASK') => void,
@@ -182,8 +192,8 @@ const BacklogTaskItem = ({
                 </Tooltip>
               </TooltipProvider>
             )}
-            <Badge variant={(task.eisenhower?.toLowerCase() || 'q4') as any} className="text-[8px] px-1 py-0 h-4 scale-90">
-              {task.eisenhower || 'Q4'}
+            <Badge variant={(task.eisenhower.toLowerCase() as 'q1' | 'q2' | 'q3' | 'q4')} className="text-[8px] px-1 py-0 h-4 scale-90">
+              {task.eisenhower}
             </Badge>
           </div>
         </div>
@@ -219,8 +229,8 @@ const BacklogTaskItem = ({
                     <div className="flex items-center gap-1 flex-1 min-w-0">
                       <span className='truncate'>{sub.title}</span>
                       {sub.type === 'multi-time' && (
-                        <span className={`text-[10px] font-mono shrink-0 ${(sub as any).completedCount > (sub.repeatLimit || 0) ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
-                          ({(sub as any).completedCount || 0}/{sub.repeatLimit})
+                        <span className={`text-[10px] font-mono shrink-0 ${(sub.completedCount || 0) > (sub.repeatLimit || 0) ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
+                          ({sub.completedCount || 0}/{sub.repeatLimit})
                         </span>
                       )}
                       {sub.type === 'daily' && <InfinityIcon className="h-3 w-3 text-blue-400 shrink-0" />}
@@ -239,7 +249,7 @@ const BacklogTaskItem = ({
                         </Tooltip>
                       </TooltipProvider>
                     )}
-                    <Badge variant={(sub.eisenhower?.toLowerCase() || 'q4') as any} className="text-[8px] px-1 py-0 h-4">
+                    <Badge variant={(sub.eisenhower?.toLowerCase() || 'q4') as 'q1' | 'q2' | 'q3' | 'q4'} className="text-[8px] px-1 py-0 h-4">
                       {sub.eisenhower || 'Q4'}
                     </Badge>
                   </div>
@@ -264,7 +274,7 @@ const DraggableItem = ({
   className 
 }: { 
   id: string, 
-  data: any, 
+  data: DraggableData, 
   children: React.ReactNode, 
   isDesktop: boolean, 
   onItemTap: () => void,
@@ -299,12 +309,13 @@ const DraggableItem = ({
     isPreventDefault: false,
   });
 
-  const handlePointerDown = (e: React.PointerEvent) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     startPosRef.current = { x: e.clientX, y: e.clientY };
     isMovingRef.current = false;
     
     if (!isDesktop && !isDisabled) {
-      longPress.onMouseDown(e as any);
+      // Cast through unknown to MouseEvent for compatibility with react-use useLongPress
+      longPress.onMouseDown(e as unknown as React.MouseEvent);
     }
   };
 
@@ -347,3 +358,4 @@ const DraggableItem = ({
     </div>
   );
 };
+
