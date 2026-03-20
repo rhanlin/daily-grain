@@ -7,10 +7,10 @@ import { useDailyPlan } from '@/hooks/useDailyPlan';
 import { PlanToolbar } from './PlanToolbar';
 import { DraggableTask } from '@/components/dnd/DraggableTask';
 import { TaskItem } from '../tasks/TaskItem';
-import { db, type Task } from '@/lib/db';
+import { db, type Task, type DailyPlanItem, type SubTask } from '@/lib/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useDroppable, useDndContext } from '@dnd-kit/core';
-import { X, Trash2, Pencil, Infinity as InfinityIcon } from 'lucide-react';
+import { X, Trash2, Pencil, Infinity as InfinityIcon, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
   Drawer,
@@ -30,21 +30,28 @@ import { Label } from '@/components/ui/label';
 import { repository } from '@/lib/repository';
 import { useMedia } from 'react-use';
 import { getLocalToday, addDays, subDays } from '@/lib/utils';
-import { MoreHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwipe } from '@/hooks/useSwipe';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useSubTask } from '@/hooks/useSubTask';
+
+interface ResolvedDailyPlanItem extends DailyPlanItem {
+  data?: Task | SubTask;
+  parentTask?: Task;
+}
 
 interface DailyPlanViewProps {
   selectedDate: string;
   onDateChange: (date: string) => void;
-  openDrawer: () => void;
+  onQuickAdd: () => void;
 }
 
-export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDateChange, openDrawer }) => {
+export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDateChange, onQuickAdd }) => {
   const { planItems, triggerRollover, removeFromPlan } = useDailyPlan(selectedDate);
   const [sortByMatrix, setSortByMatrix] = useState(false);
-  const [actionItem, setActionItem] = useState<any | null>(null);
+  const [actionItem, setActionItem] = useState<ResolvedDailyPlanItem | null>(null);
   // US2: Edit state
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
@@ -89,7 +96,7 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
   const planItemsSignature = JSON.stringify(planItems);
 
   // We need the actual Task/Subtask objects to render
-  const resolvedItems = useLiveQuery(async () => {
+  const resolvedItems = useLiveQuery<ResolvedDailyPlanItem[]>(async () => {
     const results = [];
     for (const item of planItems) {
       let data;
@@ -107,13 +114,20 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
     return results;
   }, [planItemsSignature]);
 
-  // Keep track of the last valid items to prevent flickering to empty during re-fetches
-  const lastValidItemsRef = React.useRef<any[]>([]);
-  if (resolvedItems) {
-    lastValidItemsRef.current = resolvedItems;
-  }
+  // Use state to maintain the last valid display items to prevent flickering during re-fetches
+  const [stableItems, setStableItems] = useState<ResolvedDailyPlanItem[]>([]);
   
-  const displayItems = resolvedItems || lastValidItemsRef.current || [];
+  useEffect(() => {
+    if (resolvedItems) {
+      // Use requestAnimationFrame to avoid synchronous cascading renders
+      const frame = requestAnimationFrame(() => {
+        setStableItems(resolvedItems);
+      });
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [resolvedItems]);
+
+  const displayItems = stableItems;
   
   // Sort by Matrix if toggled
   const sortedDisplayItems = [...displayItems].sort((a, b) => {
@@ -215,9 +229,9 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
             </SortableContext>
 
             {displayItems.length === 0 && (
-              <div className="text-center py-12 border-2 border-dashed rounded-xl" onClick={openDrawer}>
+              <div className="text-center py-12 border-2 border-dashed rounded-xl cursor-pointer hover:bg-accent/50 transition-colors" onClick={onQuickAdd}>
                 <p className="text-muted-foreground italic">今日尚無計畫項目</p>
-                <p className="text-xs text-muted-foreground">點擊展開「待辦清單」新增項目</p>
+                <p className="text-xs text-muted-foreground">點擊「快捷新增」或展開「待辦清單」</p>
               </div>
             )}
           </motion.div>
@@ -234,7 +248,7 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
               <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base" onClick={handleStartEdit}>
                 <Pencil className="h-5 w-5" /> 編輯標題
               </Button>
-              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base text-destructive hover:text-destructive" onClick={() => handleRemove(actionItem.id)}>
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base text-destructive hover:text-destructive" onClick={() => actionItem && handleRemove(actionItem.id)}>
                 <Trash2 className="h-5 w-5" /> 從今日計畫移除
               </Button>
             </div>
@@ -268,12 +282,13 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
             <Button onClick={handleSubmitEdit}>確認</Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
+        </Dialog>
+        </div>
+        );
+        };
 
-const PlanItemWrapper: React.FC<{ item: any, isDesktop: boolean, disabled?: boolean, onRemove: () => void, onOpenMenu: () => void }> = ({ item, isDesktop, disabled, onRemove, onOpenMenu }) => {
+
+const PlanItemWrapper: React.FC<{ item: ResolvedDailyPlanItem, isDesktop: boolean, disabled?: boolean, onRemove: () => void, onOpenMenu: () => void }> = ({ item, isDesktop, disabled, onRemove, onOpenMenu }) => {
   return (
     <DraggableTask id={item.id} disabled={disabled}>
       <div 
@@ -306,14 +321,14 @@ const PlanItemWrapper: React.FC<{ item: any, isDesktop: boolean, disabled?: bool
   );
 };
 
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useSubTask } from '@/hooks/useSubTask';
+interface SubTaskWithProgress extends SubTask {
+  completedCount: number;
+}
 
 // New component specifically for rendering a sub-task within the daily plan
-const PlanSubTaskItem: React.FC<{ item: any, isDesktop: boolean, onOpenMenu: () => void }> = ({ item, isDesktop, onOpenMenu }) => {
-  const { subtasks } = useSubTask(item.parentTask?.id);
-  const subtaskDef = subtasks.find((s: any) => s.id === item.refId);
+const PlanSubTaskItem: React.FC<{ item: ResolvedDailyPlanItem, isDesktop: boolean, onOpenMenu: () => void }> = ({ item, isDesktop, onOpenMenu }) => {
+  const { subtasks } = useSubTask(item.parentTask?.id || '');
+  const subtaskDef = subtasks.find((s) => s.id === item.refId) as SubTaskWithProgress | undefined;
 
   if (!item.data || !item.parentTask) {
     return null; // Or a loading/error state
@@ -324,7 +339,7 @@ const PlanSubTaskItem: React.FC<{ item: any, isDesktop: boolean, onOpenMenu: () 
   };
 
   const isExceeded = subtaskDef?.type === 'multi-time' && 
-    (subtaskDef as any).completedCount > (subtaskDef.repeatLimit || 0);
+    (subtaskDef.completedCount > (subtaskDef.repeatLimit || 0));
 
   return (
     <div className={`border rounded-lg p-3 bg-card flex items-center gap-2 shadow-sm text-sm transition-opacity ${item.isCompleted ? 'opacity-40' : ''}`}>
@@ -339,7 +354,7 @@ const PlanSubTaskItem: React.FC<{ item: any, isDesktop: boolean, onOpenMenu: () 
         <span className={`font-medium truncate ${item.isCompleted ? 'line-through' : ''}`}>{item.data?.title}</span>
         {subtaskDef?.type === 'multi-time' && (
           <span className={`text-[10px] font-mono shrink-0 ${isExceeded ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
-            ({(subtaskDef as any).completedCount || 0}/{subtaskDef.repeatLimit})
+            ({subtaskDef.completedCount || 0}/{subtaskDef.repeatLimit})
           </span>
         )}
         {subtaskDef?.type === 'daily' && <InfinityIcon className="h-3 w-3 text-blue-400 shrink-0" />}

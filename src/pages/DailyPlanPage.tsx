@@ -17,14 +17,16 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { useDailyPlan } from '@/hooks/useDailyPlan';
-import { Plus } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
 import { DailyPlanView } from '@/features/daily-plan/DailyPlanView';
 import { BacklogContent } from '@/features/daily-plan/BacklogContent';
+import { DailyPlanSpeedDial } from '@/features/daily-plan/DailyPlanSpeedDial';
+import { QuickAddTaskDrawer } from '@/features/daily-plan/QuickAddTaskDrawer';
+import { DesktopQuickAdd } from '@/features/daily-plan/DesktopQuickAdd';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Drawer, DrawerTrigger, DrawerContent } from '@/components/ui/drawer';
+import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { useMedia } from 'react-use';
 import { toast } from "sonner"
 import { getLocalToday } from '@/lib/utils';
@@ -40,6 +42,7 @@ export const DailyPlanPage: React.FC = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [conflict, setConflict] = useState<ConflictState | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [backlogIndex, setBacklogIndex] = useState(0);
 
   const isDesktop = useMedia("(min-width: 768px)");
@@ -147,29 +150,17 @@ export const DailyPlanPage: React.FC = () => {
       >
         <div className="flex pt-2 h-[calc(100vh-120px-0.5rem)] sm:h-[calc(100vh-57px-0.5rem)]">
           <div className="flex-1 h-full overflow-y-auto md:pr-4 md:py-2">
-            <DailyPlanView selectedDate={selectedDate} onDateChange={setSelectedDate} openDrawer={() => setIsDrawerOpen(true)} />
+            <DailyPlanView 
+              selectedDate={selectedDate} 
+              onDateChange={setSelectedDate} 
+              onQuickAdd={() => setIsQuickAddOpen(true)}
+            />
           </div>
 
           {isDesktop ? (
-            <div className="w-[350px] border-l">
-              <BacklogContent 
-                selectedDate={selectedDate}
-                scheduledMap={scheduledMap}
-                isDesktop={isDesktop}
-                onItemTap={handleItemTap}
-                activeIndex={backlogIndex}
-                onActiveIndexChange={setBacklogIndex}
-                onClose={() => setIsDrawerOpen(false)}
-              />
-            </div>
-          ) : (
-            <Drawer repositionInputs={false} open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-              <DrawerTrigger asChild>
-                <Button className="fixed bottom-24 right-6 h-12 w-12 rounded-full shadow-lg z-50">
-                  <Plus className="h-6 w-6" />
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent className="h-[75vh]">
+            <div className="w-[350px] border-l flex flex-col h-full overflow-hidden">
+              <DesktopQuickAdd selectedDate={selectedDate} />
+              <div className="flex-1 overflow-y-auto">
                 <BacklogContent 
                   selectedDate={selectedDate}
                   scheduledMap={scheduledMap}
@@ -179,10 +170,40 @@ export const DailyPlanPage: React.FC = () => {
                   onActiveIndexChange={setBacklogIndex}
                   onClose={() => setIsDrawerOpen(false)}
                 />
-              </DrawerContent>
-            </Drawer>
+              </div>
+            </div>
+          ) : (
+            <>
+              <DailyPlanSpeedDial 
+                onOpenBacklog={() => setIsDrawerOpen(true)}
+                onOpenQuickAdd={() => setIsQuickAddOpen(true)}
+              />
+              
+              <Drawer repositionInputs={false} open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+                <DrawerContent className="h-[75vh]">
+                  <BacklogContent 
+                    selectedDate={selectedDate}
+                    scheduledMap={scheduledMap}
+                    isDesktop={isDesktop}
+                    onItemTap={handleItemTap}
+                    activeIndex={backlogIndex}
+                    onActiveIndexChange={setBacklogIndex}
+                    onClose={() => setIsDrawerOpen(false)}
+                  />
+                </DrawerContent>
+              </Drawer>
+            </>
           )}
         </div>
+
+        {/* Mobile Quick Add Drawer */}
+        {!isDesktop && (
+          <QuickAddTaskDrawer
+            open={isQuickAddOpen}
+            onOpenChange={setIsQuickAddOpen}
+            selectedDate={selectedDate}
+          />
+        )}
 
         <DragOverlay adjustScale={true}>
           {activeId ? (

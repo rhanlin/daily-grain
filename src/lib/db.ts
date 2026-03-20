@@ -96,27 +96,13 @@ export class MyDatabase extends Dexie {
     this.version(4).stores({
       subtasks: 'id, taskId, updatedAt, createdAt, type',
       dailyPlanItems: 'id, date, refId, updatedAt, isCompleted'
-    }).upgrade(async tx => {
+    }).upgrade(async () => {
       // 1. Initialize SubTask fields
-      await tx.table('subtasks').toCollection().modify(subtask => {
-        if (!subtask.type) {
-          subtask.type = 'one-time';
-        }
-      });
 
-      // 2. Initialize DailyPlanItem.isCompleted based on current Task/SubTask status
-      const items = await tx.table('dailyPlanItems').toArray();
-      for (const item of items) {
-        let isCompleted = false;
-        if (item.refType === 'TASK') {
-          const task = await tx.table('tasks').get(item.refId);
-          isCompleted = task?.status === 'DONE';
-        } else {
-          const subtask = await tx.table('subtasks').get(item.refId);
-          isCompleted = subtask?.isCompleted || false;
-        }
-        await tx.table('dailyPlanItems').update(item.id, { isCompleted });
-      }
+    });
+
+    this.version(5).stores({
+      subtasks: 'id, taskId, updatedAt, createdAt, type, title'
     });
   }
 }

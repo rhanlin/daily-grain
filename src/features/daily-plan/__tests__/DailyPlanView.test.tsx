@@ -21,7 +21,7 @@ beforeEach(() => {
 
 // Mock components and hooks
 vi.mock('@dnd-kit/sortable', () => ({
-  SortableContext: ({ children, id }: any) => <div data-testid="sortable-context" data-id={id}>{children}</div>,
+  SortableContext: ({ children, id }: { children: React.ReactNode, id: string }) => <div data-testid="sortable-context" data-id={id}>{children}</div>,
   verticalListSortingStrategy: {},
 }));
 
@@ -34,7 +34,7 @@ vi.mock('@/hooks/useDailyPlan', () => ({
 }));
 
 vi.mock('@/components/dnd/DraggableTask', () => ({
-  DraggableTask: ({ children, disabled }: any) => (
+  DraggableTask: ({ children, disabled }: { children: React.ReactNode, disabled: boolean }) => (
     <div data-testid="draggable-item" data-disabled={disabled}>
       {children}
     </div>
@@ -52,14 +52,14 @@ vi.mock('@dnd-kit/core', () => ({
 
 describe('DailyPlanView', () => {
   it('renders SortableContext with correct ID', () => {
-    render(<DailyPlanView selectedDate="2026-02-04" onDateChange={vi.fn()} openDrawer={vi.fn()} />);
+    render(<DailyPlanView selectedDate="2026-02-04" onDateChange={vi.fn()} onQuickAdd={vi.fn()} />);
     
     const context = screen.getByTestId('sortable-context');
     expect(context).toHaveAttribute('data-id', 'daily-plan');
   });
 
   it('passes disabled=false to items when matrix sort is off', () => {
-    render(<DailyPlanView selectedDate="2026-02-04" onDateChange={vi.fn()} openDrawer={vi.fn()} />);
+    render(<DailyPlanView selectedDate="2026-02-04" onDateChange={vi.fn()} onQuickAdd={vi.fn()} />);
     
     const item = screen.getByTestId('draggable-item');
     expect(item).toHaveAttribute('data-disabled', 'false');

@@ -213,6 +213,32 @@ export const repository = {
       await this.syncParentTaskStatus(taskId);
       return subtask;
     },
+    async quickCreate(title: string, date: string, type: SubTaskType = 'one-time', taskId?: string) {
+      let targetTaskId = taskId;
+
+      if (!targetTaskId) {
+        // 1. Try to find the most recently created task
+        const lastTask = await db.tasks.orderBy('createdAt').reverse().first();
+        if (lastTask) {
+          targetTaskId = lastTask.id;
+        } else {
+          // 2. Create default Category and Task
+          const cat = await repository.categories.create('一般', '#94a3b8');
+          const task = await repository.tasks.create(cat.id, '日常任務');
+          targetTaskId = task.id;
+        }
+      }
+
+      // 3. Create the SubTask
+      const subtask = await this.create(targetTaskId, title, type);
+
+      // 4. Add to Daily Plan for the specified date
+      const items = await repository.dailyPlan.getByDate(date);
+      const maxOrder = items.length > 0 ? Math.max(...items.map(i => i.orderIndex)) : -1;
+      await repository.dailyPlan.add(date, subtask.id, 'SUBTASK', maxOrder + 1);
+
+      return subtask;
+    },
     async update(id: string, updates: Partial<SubTask>) {
       const updatedAt = new Date().toISOString();
       

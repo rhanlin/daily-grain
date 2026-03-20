@@ -377,6 +377,49 @@ describe('repository.dailyPlan (Recurring)', () => {
     expect(updatedSub?.type).toBe('one-time');
     expect(updatedSub?.repeatLimit).toBeUndefined();
   });
+
+  describe('quickCreate', () => {
+    it('should use provided taskId if available', async () => {
+      const cat = await repository.categories.create('Cat', '#000');
+      const task = await repository.tasks.create(cat.id, 'Task');
+      const sub = await repository.subtasks.quickCreate('New Sub', '2026-03-19', 'one-time', task.id);
+      
+      expect(sub.taskId).toBe(task.id);
+      expect(sub.title).toBe('New Sub');
+      
+      const planItems = await repository.dailyPlan.getByDate('2026-03-19');
+      expect(planItems.some(i => i.refId === sub.id)).toBe(true);
+    });
+
+    it('should fallback to most recent task if taskId is missing', async () => {
+      const cat = await repository.categories.create('Cat', '#000');
+      const task1 = await repository.tasks.create(cat.id, 'Old Task');
+      const task2 = await repository.tasks.create(cat.id, 'New Task');
+      
+      // Manually adjust timestamps to ensure task2 is newer
+      await db.tasks.update(task1.id, { createdAt: '2026-03-19T10:00:00Z' });
+      await db.tasks.update(task2.id, { createdAt: '2026-03-19T11:00:00Z' });
+
+      const sub = await repository.subtasks.quickCreate('Auto Sub', '2026-03-19');
+      expect(sub.taskId).toBe(task2.id);
+    });
+
+    it('should create default Category and Task if none exist', async () => {
+      // Database is cleared in beforeEach
+      const sub = await repository.subtasks.quickCreate('First Ever Sub', '2026-03-19');
+      
+      const cats = await db.categories.toArray();
+      expect(cats).toHaveLength(1);
+      expect(cats[0].name).toBe('一般');
+      
+      const tasks = await db.tasks.toArray();
+      expect(tasks).toHaveLength(1);
+      expect(tasks[0].title).toBe('日常任務');
+      expect(tasks[0].categoryId).toBe(cats[0].id);
+      
+      expect(sub.taskId).toBe(tasks[0].id);
+    });
+  });
 });
 
 describe('subtaskComparator', () => {
