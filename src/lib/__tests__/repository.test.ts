@@ -420,6 +420,30 @@ describe('repository.dailyPlan (Recurring)', () => {
       expect(sub.taskId).toBe(tasks[0].id);
     });
   });
+
+  describe('dailyPlan actions', () => {
+    it('should move item to new date and append to end', async () => {
+      const item = await repository.dailyPlan.add('2026-03-19', 'r1', 'TASK', 0);
+      await repository.dailyPlan.add('2026-03-20', 'r2', 'TASK', 500);
+      
+      await repository.dailyPlan.moveItemToDate(item.id, '2026-03-20');
+      
+      const moved = await db.dailyPlanItems.get(item.id);
+      expect(moved?.date).toBe('2026-03-20');
+      expect(moved?.orderIndex).toBeGreaterThan(500);
+    });
+
+    it('should bulk update order', async () => {
+      const i1 = await repository.dailyPlan.add('2026-03-19', 'r1', 'TASK', 0);
+      const i2 = await repository.dailyPlan.add('2026-03-19', 'r2', 'TASK', 1000);
+      
+      await repository.dailyPlan.bulkUpdateOrder([i2.id, i1.id]);
+      
+      const all = await repository.dailyPlan.getByDate('2026-03-19');
+      expect(all[0].id).toBe(i2.id);
+      expect(all[1].id).toBe(i1.id);
+    });
+  });
 });
 
 describe('subtaskComparator', () => {

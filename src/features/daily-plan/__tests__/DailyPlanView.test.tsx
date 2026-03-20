@@ -51,17 +51,17 @@ vi.mock('@dnd-kit/core', () => ({
 }));
 
 describe('DailyPlanView', () => {
-  it('renders SortableContext with correct ID', () => {
-    render(<DailyPlanView selectedDate="2026-02-04" onDateChange={vi.fn()} onQuickAdd={vi.fn()} />);
+  it('renders SortableContext with correct ID', async () => {
+    render(<DailyPlanView selectedDate="2026-02-04" onDateChange={vi.fn()} onQuickAdd={vi.fn()} hideRoutine={false} onToggleHideRoutine={vi.fn()} />);
     
-    const context = screen.getByTestId('sortable-context');
+    const context = await screen.findByTestId('sortable-context');
     expect(context).toHaveAttribute('data-id', 'daily-plan');
   });
 
-  it('passes disabled=false to items when matrix sort is off', () => {
-    render(<DailyPlanView selectedDate="2026-02-04" onDateChange={vi.fn()} onQuickAdd={vi.fn()} />);
+  it('passes disabled=false to items when matrix sort is off', async () => {
+    render(<DailyPlanView selectedDate="2026-02-04" onDateChange={vi.fn()} onQuickAdd={vi.fn()} hideRoutine={false} onToggleHideRoutine={vi.fn()} />);
     
-    const item = screen.getByTestId('draggable-item');
+    const item = await screen.findByTestId('draggable-item');
     expect(item).toHaveAttribute('data-disabled', 'false');
   });
 });

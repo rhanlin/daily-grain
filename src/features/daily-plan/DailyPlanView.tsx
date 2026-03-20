@@ -46,10 +46,18 @@ interface DailyPlanViewProps {
   selectedDate: string;
   onDateChange: (date: string) => void;
   onQuickAdd: () => void;
+  hideRoutine: boolean;
+  onToggleHideRoutine: () => void;
 }
 
-export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDateChange, onQuickAdd }) => {
-  const { planItems, triggerRollover, removeFromPlan } = useDailyPlan(selectedDate);
+export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ 
+  selectedDate, 
+  onDateChange, 
+  onQuickAdd,
+  hideRoutine,
+  onToggleHideRoutine
+}) => {
+  const { planItems, triggerRollover, removeFromPlan } = useDailyPlan(selectedDate, { hideRoutine });
   const [sortByMatrix, setSortByMatrix] = useState(false);
   const [actionItem, setActionItem] = useState<ResolvedDailyPlanItem | null>(null);
   // US2: Edit state
@@ -197,6 +205,8 @@ export const DailyPlanView: React.FC<DailyPlanViewProps> = ({ selectedDate, onDa
         onDateChange={onDateChange} 
         sortByMatrix={sortByMatrix}
         onToggleSort={() => setSortByMatrix(!sortByMatrix)}
+        hideRoutine={hideRoutine}
+        onToggleHideRoutine={onToggleHideRoutine}
       />
 
       <div ref={setNodeRef} className="space-y-2 min-h-[400px] border-2 border-transparent rounded-xl transition-colors overflow-x-hidden">

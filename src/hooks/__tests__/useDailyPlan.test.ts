@@ -47,4 +47,37 @@ describe('useDailyPlan Hook', () => {
     const { result: resultAfter } = renderHook(() => useDailyPlan(date));
     await waitFor(() => expect(resultAfter.current.planItems).toHaveLength(0));
   });
+
+  it('should reorder items correctly when routine filter is active', async () => {
+    const date = '2026-02-01';
+    const cat = await repository.categories.create('Cat', '#000');
+    const task = await repository.tasks.create(cat.id, 'Task 1');
+    const subOne = await repository.subtasks.create(task.id, 'One-time', 'one-time');
+    const subDaily = await repository.subtasks.create(task.id, 'Daily', 'daily');
+    const subTwo = await repository.subtasks.create(task.id, 'Another One-time', 'one-time');
+
+    const item1 = await repository.dailyPlan.add(date, subOne.id, 'SUBTASK', 1000);
+    const itemHidden = await repository.dailyPlan.add(date, subDaily.id, 'SUBTASK', 2000);
+    const item2 = await repository.dailyPlan.add(date, subTwo.id, 'SUBTASK', 3000);
+
+    const { result } = renderHook(() => useDailyPlan(date, { hideRoutine: true }));
+    await waitFor(() => expect(result.current.planItems).toHaveLength(2));
+    expect(result.current.planItems[0].id).toBe(item1.id);
+    expect(result.current.planItems[1].id).toBe(item2.id);
+
+    // Swap visible items
+    await waitFor(async () => {
+      await result.current.reorderItems([item2.id, item1.id]);
+    });
+
+    // Check database state
+    const updatedAll = await repository.dailyPlan.getByDate(date);
+    expect(updatedAll).toHaveLength(3);
+    
+    // Hidden item should still be in the middle (relative position preserved)
+    // Absolute positions are re-calculated: 0, 1, 2
+    expect(updatedAll[0].id).toBe(item2.id);
+    expect(updatedAll[1].id).toBe(itemHidden.id);
+    expect(updatedAll[2].id).toBe(item1.id);
+  });
 });

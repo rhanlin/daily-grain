@@ -4,31 +4,42 @@ import { repository } from '@/lib/repository';
 import { rolloverUnfinishedItems } from '@/lib/rollover';
 import { getLocalToday } from '@/lib/utils';
 
-export const useDailyPlan = (date: string) => {
+export const useDailyPlan = (date: string, options?: { hideRoutine?: boolean }) => {
   const planItems = useLiveQuery(
     async () => {
       const items = await repository.dailyPlan.getByDate(date);
       // Filter items to exclude archived task references
-      const filteredItems = [];
+      const resolvedItems = [];
       for (const item of items) {
+        let shouldInclude = true;
         if (item.refType === 'TASK') {
           const task = await db.tasks.get(item.refId);
-          if (task && task.status !== 'ARCHIVED') {
-            filteredItems.push(item);
+          if (!task || task.status === 'ARCHIVED') {
+            shouldInclude = false;
           }
         } else if (item.refType === 'SUBTASK') {
           const subtask = await db.subtasks.get(item.refId);
           if (subtask) {
             const parentTask = await db.tasks.get(subtask.taskId);
-            if (parentTask && parentTask.status !== 'ARCHIVED') {
-              filteredItems.push(item);
+            if (!parentTask || parentTask.status === 'ARCHIVED') {
+              shouldInclude = false;
             }
+            // US2: Filter out daily subtasks if requested
+            if (options?.hideRoutine && subtask.type === 'daily') {
+              shouldInclude = false;
+            }
+          } else {
+            shouldInclude = false;
           }
         }
+        
+        if (shouldInclude) {
+          resolvedItems.push(item);
+        }
       }
-      return filteredItems;
+      return resolvedItems;
     },
-    [date]
+    [date, options?.hideRoutine]
   );
 
   const addToPlan = async (refId: string, refType: 'TASK' | 'SUBTASK') => {
@@ -76,10 +87,25 @@ export const useDailyPlan = (date: string) => {
   };
 
   const reorderItems = async (ids: string[]) => {
-    // Simple implementation: update orderIndex based on array position
-    for (let i = 0; i < ids.length; i++) {
-      await repository.dailyPlan.updateOrder(ids[i], i * 1000);
+    // ids contains the new order of visible items
+    // We need to fetch ALL items for this date to preserve hidden ones
+    const allItems = await repository.dailyPlan.getByDate(date);
+    const visibleIdsSet = new Set(ids);
+    
+    // Construct new order: merge visible items in their new order 
+    // with hidden items in their original relative positions.
+    const newFullOrderIds = [...allItems.map(i => i.id)];
+    
+    // Map visible items to their new positions in the full list
+    let visibleIdx = 0;
+    for (let i = 0; i < newFullOrderIds.length; i++) {
+        if (visibleIdsSet.has(newFullOrderIds[i])) {
+            newFullOrderIds[i] = ids[visibleIdx];
+            visibleIdx++;
+        }
     }
+
+    await repository.dailyPlan.bulkUpdateOrder(newFullOrderIds);
   };
 
   const triggerRollover = async () => {

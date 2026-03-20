@@ -304,6 +304,27 @@ export const repository = {
       const updatedAt = new Date().toISOString();
       await db.dailyPlanItems.update(id, { orderIndex, updatedAt });
     },
+    async bulkUpdateOrder(ids: string[]) {
+      const updatedAt = new Date().toISOString();
+      await db.transaction('rw', db.dailyPlanItems, async () => {
+        for (let i = 0; i < ids.length; i++) {
+          await db.dailyPlanItems.update(ids[i], { orderIndex: i, updatedAt });
+        }
+      });
+    },
+    async moveItemToDate(itemId: string, newDate: string) {
+      const updatedAt = new Date().toISOString();
+      await db.transaction('rw', db.dailyPlanItems, async () => {
+        const items = await db.dailyPlanItems.where('date').equals(newDate).sortBy('orderIndex');
+        const maxOrder = items.length > 0 ? items[items.length - 1].orderIndex : -1;
+        await db.dailyPlanItems.update(itemId, { 
+          date: newDate, 
+          orderIndex: maxOrder + 1000, 
+          isRollover: false, // Reset rollover status on manual move
+          updatedAt 
+        });
+      });
+    },
     // T006: Handle decoupling logic for multi-time/daily tasks
     async toggleCompletion(itemId: string, isCompleted: boolean) {
       const updatedAt = new Date().toISOString();

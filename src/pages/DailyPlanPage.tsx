@@ -10,6 +10,7 @@ import {
   DragOverlay,
   type DragStartEvent,
   type DragEndEvent,
+  type DragOverEvent,
   type Active
 } from '@dnd-kit/core';
 import {
@@ -24,12 +25,14 @@ import { BacklogContent } from '@/features/daily-plan/BacklogContent';
 import { DailyPlanSpeedDial } from '@/features/daily-plan/DailyPlanSpeedDial';
 import { QuickAddTaskDrawer } from '@/features/daily-plan/QuickAddTaskDrawer';
 import { DesktopQuickAdd } from '@/features/daily-plan/DesktopQuickAdd';
+import { SideGuidePanels } from '@/features/daily-plan/SideGuidePanels';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { useMedia } from 'react-use';
 import { toast } from "sonner"
-import { getLocalToday } from '@/lib/utils';
+import { getLocalToday, addDays, subDays } from '@/lib/utils';
+import { repository } from '@/lib/repository';
 
 interface ConflictState {
   active: Active;
@@ -38,12 +41,15 @@ interface ConflictState {
 
 export const DailyPlanPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(getLocalToday());
-  const { planItems, addToPlan, reorderItems, moveItem } = useDailyPlan(selectedDate);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [hideRoutine, setHideRoutine] = useState(false);
+  const { planItems, addToPlan, reorderItems, moveItem } = useDailyPlan(selectedDate, { hideRoutine });
   const [activeId, setActiveId] = useState<string | null>(null);
   const [conflict, setConflict] = useState<ConflictState | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [backlogIndex, setBacklogIndex] = useState(0);
+
+  const hoverTimerRef = React.useRef<number | null>(null);
 
   const isDesktop = useMedia("(min-width: 768px)");
 
@@ -71,11 +77,51 @@ export const DailyPlanPage: React.FC = () => {
     }
   };
 
+  const handleDragOver = (event: DragOverEvent) => {
+    const { over } = event;
+    const isOverNav = over && (over.id === 'nav-prev' || over.id === 'nav-next' || over.id === 'side-panel-prev' || over.id === 'side-panel-next');
+
+    if (isOverNav) {
+      // If we are over a new nav target or just started hovering
+      if (!hoverTimerRef.current) {
+        hoverTimerRef.current = window.setTimeout(() => {
+          const newDate = (over.id === 'nav-prev' || over.id === 'side-panel-prev') ? subDays(selectedDate, 1) : addDays(selectedDate, 1);
+          setSelectedDate(newDate);
+          if ('vibrate' in navigator) navigator.vibrate(10);
+          hoverTimerRef.current = null;
+        }, 500);
+      }
+    } else {
+      // Clear timer if we leave nav area
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+        hoverTimerRef.current = null;
+      }
+    }
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
 
     if (!over) return;
+
+    // US1: Handle drop on navigation arrows or side panels
+    if (over.id === 'nav-prev' || over.id === 'nav-next' || over.id === 'side-panel-prev' || over.id === 'side-panel-next') {
+      // Use the already updated selectedDate as the targetDate
+      const targetDate = selectedDate;
+      // Search in ALL scheduled items because selectedDate (and thus planItems) might have shifted
+      const itemToMove = allScheduledItems?.find(i => i.id === active.id);
+      if (itemToMove) {
+        await repository.dailyPlan.moveItemToDate(itemToMove.id, targetDate);
+        toast("已移動項目", { description: `已將項目移動至 ${targetDate}` });
+      }
+      return;
+    }
 
     if (over.id === 'daily-plan-dropzone' && active.data.current?.type === 'BACKLOG_ITEM') {
       const { refId, refType } = active.data.current as { refId: string, refType: 'TASK' | 'SUBTASK' };
@@ -146,6 +192,7 @@ export const DailyPlanPage: React.FC = () => {
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
         <div className="flex pt-2 h-[calc(100vh-120px-0.5rem)] sm:h-[calc(100vh-57px-0.5rem)]">
@@ -154,6 +201,8 @@ export const DailyPlanPage: React.FC = () => {
               selectedDate={selectedDate} 
               onDateChange={setSelectedDate} 
               onQuickAdd={() => setIsQuickAddOpen(true)}
+              hideRoutine={hideRoutine}
+              onToggleHideRoutine={() => setHideRoutine(!hideRoutine)}
             />
           </div>
 
@@ -205,16 +254,23 @@ export const DailyPlanPage: React.FC = () => {
           />
         )}
 
-        <DragOverlay adjustScale={true}>
+        <DragOverlay adjustScale={false} dropAnimation={null}>
           {activeId ? (
-            <div className="border rounded-lg p-4 bg-card shadow-2xl scale-105 rotate-1 opacity-90 w-72 cursor-grabbing border-primary/50">
-              <div className="flex items-center gap-3">
-                <div className="w-1 h-6 bg-primary rounded-full" />
-                <span className="font-bold text-sm">正在調整排序...</span>
+            <div className="w-full max-w-[calc(100vw-2rem)] md:max-w-[400px] pointer-events-none">
+              <div className="bg-card border-2 border-primary/10 rounded-xl px-4 py-3 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.2)] scale-[1.02] transition-all duration-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-6 bg-primary rounded-full" />
+                  <div className="flex flex-col">
+                    <span className="font-bold text-sm text-foreground">正在移動項目</span>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">放開以完成規劃</span>
+                  </div>
+                </div>
               </div>
             </div>
           ) : null}
         </DragOverlay>
+
+        <SideGuidePanels isVisible={!!activeId} />
       </DndContext>
 
       {conflict && (
