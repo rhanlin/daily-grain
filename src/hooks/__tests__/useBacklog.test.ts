@@ -32,8 +32,8 @@ describe('useBacklog - 過濾優化驗證', () => {
 
     await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Task with Subs', status: 'TODO', description: '', eisenhower: 'Q1', createdAt: '', updatedAt: '' });
     await db.subtasks.bulkAdd([
-      { id: 's1', taskId: 't1', title: 'Sub 1', isCompleted: false, type: 'one-time', eisenhower: 'Q1', createdAt: '', updatedAt: '' },
-      { id: 's2', taskId: 't1', title: 'Sub 2', isCompleted: false, type: 'one-time', eisenhower: 'Q1', createdAt: '', updatedAt: '' }
+      { id: 's1', taskId: 't1', title: 'Sub 1', isCompleted: false, type: 'one-time', eisenhower: 'Q1', createdAt: '', updatedAt: '', isArchived: false },
+      { id: 's2', taskId: 't1', title: 'Sub 2', isCompleted: false, type: 'one-time', eisenhower: 'Q1', createdAt: '', updatedAt: '', isArchived: false }
     ]);
 
     // 初始狀態應顯示
@@ -60,7 +60,7 @@ describe('useBacklog - 過濾優化驗證', () => {
     await db.categories.add(cat1);
 
     await db.tasks.add({ id: 't1', categoryId: 'cat1', title: 'Task with Subs', status: 'TODO', description: '', eisenhower: 'Q1', createdAt: '', updatedAt: '' });
-    await db.subtasks.add({ id: 's1', taskId: 't1', title: 'Sub 1', isCompleted: false, type: 'one-time', eisenhower: 'Q1', createdAt: '', updatedAt: '' });
+    await db.subtasks.add({ id: 's1', taskId: 't1', title: 'Sub 1', isCompleted: false, type: 'one-time', eisenhower: 'Q1', createdAt: '', updatedAt: '', isArchived: false });
 
     // s1 被排程在「明天」
     await db.dailyPlanItems.add({ id: 'p1', date: '2026-02-04', refId: 's1', refType: 'SUBTASK', orderIndex: 1, isRollover: false, isCompleted: false, updatedAt: '' });
@@ -79,7 +79,7 @@ describe('useBacklog - 過濾優化驗證', () => {
     // 建立一個已封存的 Task 和其子任務
     const task = await repository.tasks.create('cat1', 'Archived Task');
     await db.tasks.update(task.id, { status: 'ARCHIVED' });
-    await db.subtasks.add({ id: 's1', taskId: task.id, title: 'Archived Sub', isCompleted: false, type: 'one-time', eisenhower: 'Q1', createdAt: '', updatedAt: '' });
+    await db.subtasks.add({ id: 's1', taskId: task.id, title: 'Archived Sub', isCompleted: false, type: 'one-time', eisenhower: 'Q1', createdAt: '', updatedAt: '', isArchived: false });
 
     const { result } = renderHook(() => useBacklog('2026-02-03'));
     await waitFor(() => expect(result.current.loading).toBe(false));

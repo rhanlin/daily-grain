@@ -3,7 +3,7 @@ import { useSubTask } from '@/hooks/useSubTask';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Pencil, MoreHorizontal, RotateCcw, Infinity as InfinityIcon } from 'lucide-react';
+import { Plus, Trash2, Pencil, MoreHorizontal, RotateCcw, Infinity as InfinityIcon, Archive } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { repository } from '@/lib/repository';
 import { type SubTask, type SubTaskType } from '@/lib/db';
@@ -84,6 +84,11 @@ export const SubTaskList: React.FC<SubTaskListProps> = ({ taskId, viewMode = 'de
     setActionSubTask(null);
   };
 
+  const handleArchive = async (id: string) => {
+    await repository.subtasks.update(id, { isArchived: true });
+    setActionSubTask(null);
+  };
+
   const confirmDelete = async () => {
     if (deleteId) {
       await repository.subtasks.delete(deleteId);
@@ -151,6 +156,7 @@ export const SubTaskList: React.FC<SubTaskListProps> = ({ taskId, viewMode = 'de
             setEditLimit={setEditLimit}
             onEdit={() => startEdit(sub)}
             onDelete={() => handleDeleteClick(sub)}
+            onArchive={() => handleArchive(sub.id)}
             onSave={() => saveEdit(sub.id)}
             onUpdateStatus={(checked) => updateSubTask(sub.id, { isCompleted: checked })}
             onUpdateEisenhower={(val) => repository.subtasks.update(sub.id, { eisenhower: val })}
@@ -184,6 +190,9 @@ export const SubTaskList: React.FC<SubTaskListProps> = ({ taskId, viewMode = 'de
               <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base" onClick={() => actionSubTask && startEdit(actionSubTask)}>
                 <Pencil className="h-5 w-5" /> 編輯標題與類型
               </Button>
+              <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base" onClick={() => actionSubTask && handleArchive(actionSubTask.id)}>
+                <Archive className="h-5 w-5" /> 封存子任務
+              </Button>
               <Button variant="outline" className="w-full justify-start gap-3 h-12 text-base text-destructive hover:text-destructive" onClick={() => actionSubTask && handleDeleteClick(actionSubTask)}>
                 <Trash2 className="h-5 w-5" /> 刪除子任務
               </Button>
@@ -209,6 +218,7 @@ interface SubTaskRowProps {
   setEditLimit: (val: number) => void;
   onEdit: () => void;
   onDelete: () => void;
+  onArchive: () => void;
   onSave: () => void;
   onUpdateStatus: (checked: boolean) => void;
   onUpdateEisenhower: (val: 'Q1' | 'Q2' | 'Q3' | 'Q4') => void;
@@ -218,7 +228,7 @@ interface SubTaskRowProps {
 const SubTaskRow: React.FC<SubTaskRowProps> = ({
   sub, isDesktop, viewMode, editingId, editTitle, setEditTitle, 
   editType, setEditType, editLimit, setEditLimit,
-  onEdit, onDelete, onSave, onUpdateStatus, onUpdateEisenhower, openAction
+  onEdit, onDelete, onArchive, onSave, onUpdateStatus, onUpdateEisenhower, openAction
 }) => {
 
   const isEditing = editingId === sub.id;
@@ -249,8 +259,8 @@ const SubTaskRow: React.FC<SubTaskRowProps> = ({
                 {sub.type === 'multi-time' && (
                   <div className="flex items-center gap-1">
                     <RotateCcw className="h-3 w-3 text-orange-400 shrink-0" />
-                    <span className={`text-[10px] font-mono ${(sub as any).completedCount > (sub.repeatLimit || 0) ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
-                      {(sub as any).completedCount || 0}/{sub.repeatLimit}
+                    <span className={`text-[10px] font-mono ${(sub as SubTask & { completedCount: number }).completedCount > (sub.repeatLimit || 0) ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
+                      {(sub as SubTask & { completedCount: number }).completedCount || 0}/{sub.repeatLimit}
                     </span>
                   </div>
                 )}
@@ -274,6 +284,9 @@ const SubTaskRow: React.FC<SubTaskRowProps> = ({
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={onEdit}>
                     <Pencil className="h-3 w-3" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={onArchive}>
+                    <Archive className="h-3 w-3 text-muted-foreground" />
                 </Button>
                 <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive" onClick={onDelete}>
                     <Trash2 className="h-3 w-3" />

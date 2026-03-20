@@ -444,6 +444,24 @@ describe('repository.dailyPlan (Recurring)', () => {
       expect(all[1].id).toBe(i1.id);
     });
   });
+
+  describe('archival logic', () => {
+    it('should archive and unarchive subtasks', async () => {
+      const cat = await repository.categories.create('Cat', '#000');
+      const task = await repository.tasks.create(cat.id, 'Task');
+      const sub = await repository.subtasks.create(task.id, 'Sub');
+      
+      expect(sub.isArchived).toBe(false);
+
+      await repository.subtasks.update(sub.id, { isArchived: true });
+      const archived = await db.subtasks.get(sub.id);
+      expect(archived?.isArchived).toBe(true);
+
+      await repository.subtasks.update(sub.id, { isArchived: false });
+      const restored = await db.subtasks.get(sub.id);
+      expect(restored?.isArchived).toBe(false);
+    });
+  });
 });
 
 describe('subtaskComparator', () => {
@@ -455,7 +473,8 @@ describe('subtaskComparator', () => {
     type: 'one-time' as const,
     eisenhower: 'Q4' as const,
     createdAt: '2026-03-19T10:00:00Z',
-    updatedAt: '2026-03-19T10:00:00Z'
+    updatedAt: '2026-03-19T10:00:00Z',
+    isArchived: false
   };
 
   it('should sort by createdAt ascending', () => {

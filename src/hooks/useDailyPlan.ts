@@ -21,7 +21,7 @@ export const useDailyPlan = (date: string, options?: { hideRoutine?: boolean }) 
           const subtask = await db.subtasks.get(item.refId);
           if (subtask) {
             const parentTask = await db.tasks.get(subtask.taskId);
-            if (!parentTask || parentTask.status === 'ARCHIVED') {
+            if (!parentTask || parentTask.status === 'ARCHIVED' || subtask.isArchived) {
               shouldInclude = false;
             }
             // US2: Filter out daily subtasks if requested

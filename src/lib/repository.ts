@@ -48,14 +48,14 @@ export const repository = {
     async delete(id: string) {
       // Soft delete category
       await db.categories.update(id, { isArchived: true, updatedAt: new Date().toISOString() });
-      // Soft delete all tasks in this category (Cascade Archive)
+      // Soft delete all tasks and subtasks in this category (Cascade Archive)
       const tasks = await db.tasks.where('categoryId').equals(id).toArray();
       for (const task of tasks) {
         await db.tasks.update(task.id, { status: 'ARCHIVED', updatedAt: new Date().toISOString() });
-        // We do NOT delete subtasks for soft-deleted tasks.
+        // US3: Also archive all subtasks under these tasks
+        await db.subtasks.where('taskId').equals(task.id).modify({ isArchived: true });
         
-        // Remove from Daily Plan to keep plan clean?
-        // If task is archived, it shouldn't appear in plan.
+        // Remove from Daily Plan to keep plan clean
         await db.dailyPlanItems.where('refId').equals(task.id).delete();
         
         // Also remove subtasks from daily plan
@@ -187,7 +187,10 @@ export const repository = {
       }
     },
     async getByTask(taskId: string) {
-      const allSubs = await db.subtasks.where('taskId').equals(taskId).toArray();
+      const allSubs = await db.subtasks
+        .where('taskId').equals(taskId)
+        .filter(s => !s.isArchived)
+        .toArray();
       allSubs.sort(subtaskComparator);
       return allSubs;
     },
@@ -207,7 +210,8 @@ export const repository = {
         repeatLimit,
         eisenhower: inheritedEisenhower,
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
+        isArchived: false
       };
       await db.subtasks.add(subtask);
       await this.syncParentTaskStatus(taskId);

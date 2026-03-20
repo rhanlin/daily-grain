@@ -34,6 +34,7 @@ export interface SubTask {
   eisenhower: 'Q1' | 'Q2' | 'Q3' | 'Q4';
   createdAt: string;
   updatedAt: string;
+  isArchived: boolean;
 }
 
 export interface DailyPlanItem {
@@ -103,6 +104,17 @@ export class MyDatabase extends Dexie {
 
     this.version(5).stores({
       subtasks: 'id, taskId, updatedAt, createdAt, type, title'
+    });
+
+    this.version(6).stores({
+      subtasks: 'id, taskId, updatedAt, createdAt, type, title, isArchived'
+    }).upgrade(async tx => {
+      // Initialize isArchived for existing SubTasks
+      await tx.table('subtasks').toCollection().modify(subtask => {
+        if (subtask.isArchived === undefined) {
+          subtask.isArchived = false;
+        }
+      });
     });
   }
 }

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useCategorySummary, type CategorySummary } from '@/hooks/useCategorySummary';
 import { CategoryCard } from './CategoryCard';
 import { useNavigate } from 'react-router-dom';
-import { FolderPlus } from 'lucide-react';
+import { FolderPlus, Archive } from 'lucide-react';
 import { CategoryActionDrawer } from './CategoryActionDrawer';
 import { EditCategoryDialog } from './EditCategoryDialog';
 import { QuickCreateTaskDrawer } from '@/features/tasks/QuickCreateTaskDrawer';
@@ -113,13 +113,13 @@ export const CategoryOverview: React.FC<{ onOpenCreateCategory: () => void }> = 
   };
 
   const handleDelete = async (cat: CategorySummary) => {
-    if (window.confirm(`確定要刪除分類「${cat.name}」嗎？相關任務也將被封存。`)) {
+    if (window.confirm(`確定要封存分類「${cat.name}」嗎？相關任務也將一併封存。您之後可以在封存中心還原。`)) {
       try {
         await repository.categories.delete(cat.id);
-        toast.success('分類已刪除');
+        toast.success('分類已封存');
       } catch (error) {
         console.error(error);
-        toast.error('刪除失敗');
+        toast.error('封存失敗');
       }
     }
   };
@@ -149,6 +149,15 @@ export const CategoryOverview: React.FC<{ onOpenCreateCategory: () => void }> = 
               />
             ))}
           </SortableContext>
+
+          {/* Archive Entry Point */}
+          <div 
+            onClick={() => navigate('/archive')}
+            className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/30 hover:bg-accent/50 cursor-pointer transition-all h-full min-h-[120px] group"
+          >
+            <Archive className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] group-hover:text-primary transition-colors">已封存項目</span>
+          </div>
         </div>
       </DndContext>
 

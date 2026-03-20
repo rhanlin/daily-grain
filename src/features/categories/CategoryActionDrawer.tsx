@@ -6,7 +6,7 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Archive } from 'lucide-react';
 import { type CategorySummary } from '@/hooks/useCategorySummary';
 
 interface CategoryActionDrawerProps {
@@ -69,8 +69,8 @@ export const CategoryActionDrawer: React.FC<CategoryActionDrawerProps> = ({
                 onOpenChange(false);
               }}
             >
-              <Trash2 className="h-5 w-5" />
-              刪除分類
+              <Archive className="h-5 w-5" />
+              封存分類
             </Button>
           </div>
           <div className="h-8" /> {/* Spacer for bottom safe area */}

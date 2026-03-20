@@ -5,6 +5,7 @@ import { HomePage } from '@/pages/HomePage';
 import { MatrixPage } from '@/pages/MatrixPage';
 import { DailyPlanPage } from '@/pages/DailyPlanPage';
 import { CategoryDetailPage } from '@/pages/CategoryDetailPage';
+import { ArchivePage } from '@/pages/ArchivePage';
 import { Toaster } from '@/components/ui/sonner';
 import { useMedia } from 'react-use';
 
@@ -21,6 +22,7 @@ function App() {
             <Route path="/matrix" element={<MatrixPage />} />
             <Route path="/daily-plan" element={<Navigate to="/" replace />} />
             <Route path="/category/:categoryId" element={<CategoryDetailPage />} />
+            <Route path="/archive" element={<ArchivePage />} />
           </Routes>
           <Toaster 
             theme="light"

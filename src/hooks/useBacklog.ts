@@ -25,6 +25,9 @@ export const useBacklog = (date: string) => {
     // Filter subtasks not in ANY plan and not completed (unless multi-time/daily)
     const backlogSubTasks: (SubTask & { completedCount: number })[] = [];
     for (const s of allSubTasks) {
+        // FR-004: Strictly exclude archived subtasks
+        if (s.isArchived) continue;
+
         // One-time: exclude if completed or scheduled
         if (s.type === 'one-time' || !s.type) {
             if (!s.isCompleted && !globalPlanRefIds.has(s.id)) {
