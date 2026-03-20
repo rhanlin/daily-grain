@@ -94,7 +94,7 @@ function Calendar({
         month_grid: cn("w-full", defaultClassNames.month_grid),
         weekdays: cn("flex", defaultClassNames.weekdays),
         weekday: cn(
-          "text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem] select-none",
+          "text-center text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem] select-none",
           defaultClassNames.weekday
         ),
         week: cn("flex w-full mt-2", defaultClassNames.week),
@@ -173,16 +173,16 @@ function Calendar({
         Weekdays: ({ className, ...props }) => (
           <div className={cn(className)} {...props} />
         ),
-        Weekday: ({ className, scope: _scope, ...props }) => (
+        Weekday: ({ className, ...props }) => (
           <div className={cn(className)} {...props} />
         ),
         Weeks: ({ className, ...props }) => (
           <div className={cn(className)} {...props} />
         ),
-        Week: ({ className, week: _week, ...props }: React.ComponentProps<typeof WeekType>) => (
+        Week: ({ className, ...props }: React.ComponentProps<typeof WeekType>) => (
           <div className={cn(className)} {...props} />
         ),
-        Day: ({ className, day: _day, modifiers: _modifiers, ...props }: React.ComponentProps<typeof DayType>) => (
+        Day: ({ className, ...props }: React.ComponentProps<typeof DayType>) => (
           <div className={cn(className)} {...props} />
         ),
         DayButton: CalendarDayButton,
