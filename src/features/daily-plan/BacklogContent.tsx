@@ -10,9 +10,12 @@ import {
 } from '@/components/ui/carousel';
 
 import { motion, useTransform, useMotionValue, type MotionValue } from 'framer-motion';
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useDailyPlan } from '@/hooks/useDailyPlan';
+import { filterBacklogGroups } from './BacklogLogic';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -46,6 +49,14 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
   const { groups, loading } = useBacklog(selectedDate);
   const { addToPlan } = useDailyPlan(selectedDate);
   const navigate = useNavigate();
+
+  const [hideRoutine, setHideRoutine] = useState(false);
+
+  // Apply filtering logic
+  const filteredGroups = useMemo(() => 
+    filterBacklogGroups(groups, hideRoutine), 
+    [groups, hideRoutine]
+  );
 
   // FR-002: Multi-select state (Category Scope)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -138,23 +149,39 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
   if (isDesktop) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden h-full">
-        <div className="p-4 border-b">
+        <div className="p-4 border-b flex justify-between items-center">
           <h2 className="text-lg font-bold text-foreground">任務清單 (Backlog)</h2>
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="backlog-hide-routine" 
+              checked={hideRoutine} 
+              onCheckedChange={setHideRoutine} 
+            />
+            <Label htmlFor="backlog-hide-routine" className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">
+              隱藏每日
+            </Label>
+          </div>
         </div>
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-8 pb-20">
-            {groups.map((group) => (
-              <CategorySlide
-                key={group.category.id}
-                category={group.category}
-                tasks={group.tasks}
-                subtasks={group.subtasks}
-                scheduledMap={scheduledMap}
-                isDesktop={isDesktop}
-                onItemTap={onItemTap}
-                {...selectionProps}
-              />
-            ))}
+            {filteredGroups.length === 0 ? (
+              <div className="py-20 text-center text-sm text-muted-foreground italic">
+                無非例行性任務
+              </div>
+            ) : (
+              filteredGroups.map((group) => (
+                <CategorySlide
+                  key={group.category.id}
+                  category={group.category}
+                  tasks={group.tasks}
+                  subtasks={group.subtasks}
+                  scheduledMap={scheduledMap}
+                  isDesktop={isDesktop}
+                  onItemTap={onItemTap}
+                  {...selectionProps}
+                />
+              ))
+            )}
           </div>
         </ScrollArea>
       </div>
@@ -165,66 +192,89 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
   return (
     <div className="flex-1 flex flex-col overflow-hidden h-full relative">
       <div className="p-4 border-b flex justify-between items-center bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
-        <h2 className="text-lg font-bold text-foreground">任務清單</h2>
-        <div className="text-[10px] font-medium bg-secondary px-2 py-0.5 rounded-full">
-          {Math.max(0, activeIndex - 1) + 1} / {groups.length}
+        <div className="flex flex-col">
+          <h2 className="text-lg font-bold text-foreground">任務清單</h2>
+          <div className="text-[10px] font-medium text-muted-foreground">
+            {Math.max(0, activeIndex - 1) + 1} / {filteredGroups.length}
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2 bg-secondary/30 px-3 py-1.5 rounded-full">
+          <Switch 
+            id="backlog-hide-routine-mobile" 
+            checked={hideRoutine} 
+            onCheckedChange={setHideRoutine} 
+            className="scale-75 origin-right"
+          />
+          <Label htmlFor="backlog-hide-routine-mobile" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+            隱藏每日
+          </Label>
         </div>
       </div>
       
-      <Carousel 
-        className="w-full flex-1 touch-pan-y" 
-        opts={{
-          align: 'center',
-          startIndex: activeIndex === 0 && groups.length > 0 ? 1 : activeIndex,
-          duration: 35, // Adjust slightly for better physics feel
-          dragFree: false,
-          containScroll: 'trimSnaps'
-        }}
-        setApi={(api) => {
-          if (!api) return;
-          apiRef.current = api;
-          
-          api.on('scroll', () => {
-            scrollProgress.set(api.scrollProgress());
-          });
+      {filteredGroups.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+          <p className="text-sm text-muted-foreground italic">當前過濾條件下無可選任務</p>
+          <Button variant="ghost" size="sm" onClick={() => setHideRoutine(false)}>
+            顯示所有任務
+          </Button>
+        </div>
+      ) : (
+        <Carousel 
+          className="w-full flex-1 touch-pan-y" 
+          opts={{
+            align: 'center',
+            startIndex: activeIndex === 0 && filteredGroups.length > 0 ? 1 : activeIndex,
+            duration: 35, // Adjust slightly for better physics feel
+            dragFree: false,
+            containScroll: 'trimSnaps'
+          }}
+          setApi={(api) => {
+            if (!api) return;
+            apiRef.current = api;
+            
+            api.on('scroll', () => {
+              scrollProgress.set(api.scrollProgress());
+            });
 
-          api.on('select', () => {
-            const current = api.selectedScrollSnap();
-            // FR-005: If scrolled to Placeholder, snap to 1
-            if (current === 0) {
-              setTimeout(() => api.scrollTo(1), 10);
-            } else {
-              onActiveIndexChange(current);
-              // US2: Haptic feedback on snap
-              if ('vibrate' in navigator) navigator.vibrate(10);
+            api.on('select', () => {
+              const current = api.selectedScrollSnap();
+              // FR-005: If scrolled to Placeholder, snap to 1
+              if (current === 0) {
+                setTimeout(() => api.scrollTo(1), 10);
+              } else {
+                onActiveIndexChange(current);
+                // US2: Haptic feedback on snap
+                if ('vibrate' in navigator) navigator.vibrate(10);
+              }
+            });
+
+            // Initialization check
+            if (api.selectedScrollSnap() === 0 && filteredGroups.length > 0) {
+              api.scrollTo(1, true);
             }
-          });
-
-          // Initialization check
-          if (api.selectedScrollSnap() === 0 && groups.length > 0) {
-            api.scrollTo(1, true);
-          }
-        }}
-      >
-        <CarouselContent className="h-full">
-          {/* FR-034: Placeholder Slide - 採完全隔離設計 */}
-          <CarouselItem className="h-full basis-4/5 pointer-events-none opacity-0 select-none" aria-hidden="true" />
-          
-          {groups.map((group, idx) => (
-            <AnimatedCarouselItem
-              key={group.category.id}
-              group={group}
-              index={idx + 1}
-              totalGroups={groups.length}
-              scrollProgress={scrollProgress}
-              scheduledMap={scheduledMap}
-              isDesktop={isDesktop}
-              onItemTap={onItemTap}
-              selectionProps={selectionProps}
-            />
-          ))}
-        </CarouselContent>
-      </Carousel>
+          }}
+        >
+          <CarouselContent className="h-full">
+            {/* FR-034: Placeholder Slide - 採完全隔離設計 */}
+            <CarouselItem className="h-full basis-4/5 pointer-events-none opacity-0 select-none" aria-hidden="true" />
+            
+            {filteredGroups.map((group, idx) => (
+              <AnimatedCarouselItem
+                key={group.category.id}
+                group={group}
+                index={idx + 1}
+                totalGroups={filteredGroups.length}
+                scrollProgress={scrollProgress}
+                scheduledMap={scheduledMap}
+                isDesktop={isDesktop}
+                onItemTap={onItemTap}
+                selectionProps={selectionProps}
+              />
+            ))}
+          </CarouselContent>
+        </Carousel>
+      )}
 
       {/* FR-003: Floating Action Bar */}
       {selectedIds.size > 0 && (

@@ -48,6 +48,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-02
 - TypeScript 5.x, Node.js v24.13.0+ + React 18+, dnd-kit, Framer Motion, Dexie.js (IndexedDB) (028-move-subtask-filter-daily)
 - TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB), Shadcn UI, Framer Motion (029-restore-archive-management)
 - IndexedDB (Schema v6) (029-restore-archive-management)
+- TypeScript 5.x, Node.js v24.13.0+ + React 18+, Shadcn UI (Switch, Label), Lucide Reac (030-backlog-routine-filter)
+- N/A (UI-only state) (030-backlog-routine-filter)
 
 - TypeScript 5.x, Node.js 20+ (for tooling) + React 18+, Vite, TailwindCSS 4, Shadcn UI, Vites (001-time-allocation-app)
 
@@ -68,9 +70,9 @@ TypeScript 5.x, Node.js 20+ (for tooling): Follow standard conventions.
 - **Strict Typing**: 每次實作完畢後的驗證環節，**必須**主動排查並消除代碼中的 `any` 型別。除非第三方庫限制，否則禁止引入新的 `any`。
 
 ## Recent Changes
+- 030-backlog-routine-filter: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Shadcn UI (Switch, Label), Lucide Reac
 - 029-restore-archive-management: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, Dexie.js (IndexedDB), Shadcn UI, Framer Motion
 - 029-restore-archive-management: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-- 028-move-subtask-filter-daily: Added TypeScript 5.x, Node.js v24.13.0+ + React 18+, dnd-kit, Framer Motion, Dexie.js (IndexedDB)
 
 
 ## ReactJS Principles
