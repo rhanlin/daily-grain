@@ -9,15 +9,16 @@ import {
   type CarouselApi,
 } from '@/components/ui/carousel';
 
-import { motion, useTransform, useMotionValue, type MotionValue } from 'framer-motion';
-import { useState, useRef, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useDailyPlan } from '@/hooks/useDailyPlan';
 import { filterBacklogGroups } from './BacklogLogic';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { triggerHaptic } from '@/lib/utils';
 
 interface BacklogContentProps {
   selectedDate: string;
@@ -49,6 +50,8 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
   const { groups, loading } = useBacklog(selectedDate);
   const { addToPlan } = useDailyPlan(selectedDate);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isHapticDebug = searchParams.get('hapticDebug') === 'true';
 
   const [hideRoutine, setHideRoutine] = useState(false);
 
@@ -61,10 +64,14 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
   // FR-002: Multi-select state (Category Scope)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
-  
-  // Custom progress tracking for 1:1 animation
-  const scrollProgress = useMotionValue(0);
+
   const apiRef = useRef<CarouselApi>(null);
+  const lastSnapIndexRef = useRef<number>(activeIndex);
+
+  // Keep ref in sync with prop
+  useEffect(() => {
+    lastSnapIndexRef.current = activeIndex;
+  }, [activeIndex]);
 
   const resetSelection = () => {
     setSelectedIds(new Set());
@@ -97,7 +104,7 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
 
   const batchAddToPlan = async () => {
     if (selectedIds.size === 0) return;
-    
+
     try {
       // Logic for confirming and adding multiple items
       for (const id of selectedIds) {
@@ -142,7 +149,7 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
       newSet.add(subTaskId);
       setSelectedIds(newSet);
       setActiveCategoryId(categoryId);
-      if ('vibrate' in navigator) navigator.vibrate(50);
+      triggerHaptic(50, isHapticDebug);
     }
   };
 
@@ -198,7 +205,7 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
             {Math.max(0, activeIndex - 1) + 1} / {filteredGroups.length}
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2 bg-secondary/30 px-3 py-1.5 rounded-full">
           <Switch 
             id="backlog-hide-routine-mobile" 
@@ -211,7 +218,7 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
           </Label>
         </div>
       </div>
-      
+
       {filteredGroups.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
           <p className="text-sm text-muted-foreground italic">當前過濾條件下無可選任務</p>
@@ -225,27 +232,31 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
           opts={{
             align: 'center',
             startIndex: activeIndex === 0 && filteredGroups.length > 0 ? 1 : activeIndex,
-            duration: 35, // Adjust slightly for better physics feel
+            duration: 25, // Snappier snap
             dragFree: false,
             containScroll: 'trimSnaps'
           }}
+
           setApi={(api) => {
             if (!api) return;
             apiRef.current = api;
-            
-            api.on('scroll', () => {
-              scrollProgress.set(api.scrollProgress());
-            });
 
             api.on('select', () => {
               const current = api.selectedScrollSnap();
               // FR-005: If scrolled to Placeholder, snap to 1
               if (current === 0) {
+                // Avoid double vibration on bounce back
                 setTimeout(() => api.scrollTo(1), 10);
-              } else {
+                return;
+              }
+
+              // US2: Haptic feedback only on index CHANGE
+              if (current !== lastSnapIndexRef.current) {
                 onActiveIndexChange(current);
-                // US2: Haptic feedback on snap
-                if ('vibrate' in navigator) navigator.vibrate(10);
+                lastSnapIndexRef.current = current;
+
+                // T006: Call triggerHaptic with debug mode
+                triggerHaptic(20, isHapticDebug);
               }
             });
 
@@ -256,16 +267,13 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
           }}
         >
           <CarouselContent className="h-full">
-            {/* FR-034: Placeholder Slide - 採完全隔離設計 */}
             <CarouselItem className="h-full basis-4/5 pointer-events-none opacity-0 select-none" aria-hidden="true" />
-            
+
             {filteredGroups.map((group, idx) => (
-              <AnimatedCarouselItem
+              <PagingCarouselItem
                 key={group.category.id}
                 group={group}
-                index={idx + 1}
-                totalGroups={filteredGroups.length}
-                scrollProgress={scrollProgress}
+                isActive={activeIndex === idx + 1}
                 scheduledMap={scheduledMap}
                 isDesktop={isDesktop}
                 onItemTap={onItemTap}
@@ -289,41 +297,32 @@ export const BacklogContent: React.FC<BacklogContentProps> = ({
   );
 };
 
-interface AnimatedCarouselItemProps {
+interface PagingCarouselItemProps {
   group: BacklogGroup;
-  index: number;
-  totalGroups: number;
-  scrollProgress: MotionValue<number>;
+  isActive: boolean;
   scheduledMap: Map<string, string>;
   isDesktop: boolean;
   onItemTap: (refId: string, refType: 'TASK' | 'SUBTASK') => void;
   selectionProps: SelectionProps;
 }
 
-const AnimatedCarouselItem: React.FC<AnimatedCarouselItemProps> = ({
+const PagingCarouselItem: React.FC<PagingCarouselItemProps> = ({
   group,
-  index,
-  totalGroups,
-  scrollProgress,
+  isActive,
   scheduledMap,
   isDesktop,
   onItemTap,
   selectionProps
 }) => {
-  const inputRange = [
-    (index - 1) / Math.max(1, totalGroups), 
-    index / Math.max(1, totalGroups), 
-    (index + 1) / Math.max(1, totalGroups)
-  ];
-  
-  const scale = useTransform(scrollProgress, inputRange, [0.9, 1, 0.9]);
-  const opacity = useTransform(scrollProgress, inputRange, [0.6, 1, 0.6]);
-
   return (
     <CarouselItem className="h-full p-4 basis-4/5 touch-pan-y">
       <motion.div
-        style={{ scale, opacity }}
-        className="h-full"
+        animate={{ 
+          scale: isActive ? 1 : 0.92,
+          opacity: isActive ? 1 : 0.5
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="h-full w-full origin-center"
       >
         <ScrollArea className="h-[calc(75vh-120px)] touch-pan-y">
           <CategorySlide

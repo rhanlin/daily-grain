@@ -1,8 +1,28 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { toast } from "sonner"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+/**
+ * Triggers a haptic feedback (vibration) if supported.
+ * Optionally shows a debug toast for testing on non-supporting devices.
+ */
+export function triggerHaptic(duration: number = 20, debug: boolean = false): void {
+  const hasVibrate = typeof navigator !== 'undefined' && 'vibrate' in navigator;
+  
+  if (hasVibrate) {
+    navigator.vibrate(duration);
+  }
+
+  if (debug) {
+    toast(`[Haptic] ${duration}ms ${!hasVibrate ? '(Unsupported)' : ''}`, {
+      id: 'haptic-debug', // Prevent toast stacking
+      duration: 1000,
+    });
+  }
 }
 
 /**
